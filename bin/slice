@@ -146,6 +146,23 @@ module SliceApp
     end
   end
 
+  desc 'Bond slices'
+  command :bond do |c|
+    c.desc 'New slice name'
+    c.flag [:s, :slice_name]
+    c.desc 'Slice1'
+    c.flag [:s, :slice1]
+    c.desc 'Slice2'
+    c.flag [:s, :slice2]
+
+    c.action do |_global_options, options, _args|
+      fail '--New slice name is manadatory' unless options[:slice_name]
+      fail '--Two slice name is manadatory for bond' unless options[:slice1]
+      fail '--Two slice name is manadatory for bond' unless options[:slice2]
+      #スライス結合の処理の部分を書く
+    end
+  end
+
   exit run(ARGV)
 end
 # rubocop:enable ModuleLength
