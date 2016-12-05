@@ -40,6 +40,75 @@ module SliceApp
     end
   end
 
+#20161202ginnan add start
+  desc 'Split a virtual slice'
+  arg_name 'name1 name2 name3'
+  command :split do |c|
+    c.desc 'Location to find socket files'
+    c.switch [:into, :slice_divide]
+    c.flag [:S, :socket_dir], default_value: Trema::DEFAULT_SOCKET_DIR
+    #c.flag [:s_new, :slice_new], default_value: Trema::DEFAULT_SOCKET_DIR
+    #c.flag [:s_a, :slice_a], default_value: Trema::DEFAULT_SOCKET_DIR
+    #c.flag [:s_b, :slice_b], default_value: Trema::DEFAULT_SOCKET_DIR
+
+    c.action do |_global_options, options, args|
+      fail 'slice name is required.' if args.empty?
+      slice_new = args[0].to_s
+      slice_a = args[1].to_s
+      slice_b = args[2].to_s
+      controller = Trema.trema_process('RoutingSwitch', options[:socket_dir]).controller
+      controller.slice.create(args.first)
+      controller.slice.all.each do |slice|
+          if slice = slice_new then
+             
+          end
+      end
+    end
+  end
+
+#add end
+
+#20161202ginnan add start
+  desc 'Merge a virtual slice'
+  arg_name 'name1 name2 name3'
+  command :merge do |c|
+    c.desc 'Location to find socket files'
+    #c.switch [:into, :slice_divide]
+    c.desc 'MAC address'
+    c.flag [:m, :mac]
+    c.desc 'Switch port'
+    c.flag [:p, :port]
+    c.desc 'Slice name'
+    c.flag [:s, :slice]
+    c.flag [:S, :socket_dir], default_value: Trema::DEFAULT_SOCKET_DIR
+
+    c.action do |_global_options, options, args|
+      DRb.start_service
+      fail 'slice name is required.' if args.empty?
+      #slice_new = args[0]
+      #slice_a = controller.slice.find(args[1])
+      #slice_b = controller.slice.find(args[2])
+      controller = Trema.trema_process('RoutingSwitch', options[:socket_dir]).controller
+      slice_new = controller.slice.create(args[0])
+      controller.slice.all.each do |slice|
+          #if slice == args[1] or slice == args[2] then
+             slice.each do |port, mac_addresses|
+              slice.delete_port(dpid: port[:dpid], port_no: port[:port_no])
+              slice_new.add_port(dpid: port[:dpid], port_no: port[:port_no])
+          mac_addresses.each do |each|
+            slice.delete_mac_address(options[:mac],
+                        dpid: port[:dpid], port_no: port[:port_no])
+            slice_new.add_mac_address(options[:mac],
+                        dpid: port[:dpid], port_no: port[:port_no])
+          end
+         end
+        end
+       #end
+    end
+  end
+
+#add end
+
   desc 'Lists slices'
   command :list do |c|
     c.desc 'Location to find socket files'
