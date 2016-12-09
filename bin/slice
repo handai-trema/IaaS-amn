@@ -42,6 +42,113 @@ module SliceApp
     end
   end
 
+#20161202ginnan add start
+  desc 'Split a virtual slice'
+  arg_name 'name'
+  command :split do |c|
+    c.desc 'Location to find socket files'
+    c.desc 'MAC address'
+    c.flag [:m, :mac]
+    c.desc 'Switch port'
+    c.flag [:p, :port]
+    c.desc 'Slice name'
+    c.flag [:s, :slice]
+    c.flag [:S, :socket_dir], default_value: Trema::DEFAULT_SOCKET_DIR
+
+    c.action do |_global_options, options, args|
+      DRb.start_service
+      fail 'slice name is required.' if args.empty?
+      #slice_new = args[0]
+      #slice_a = args[1]
+      #slice_b = args[2]
+      controller = Trema.trema_process('RoutingSwitch', options[:socket_dir]).controller
+      #slice_new = slice(options[:socket_dir]).create(args[0])
+      slice_set = nil
+
+      while !(slice_set == 'end') do
+       puts "Input slice name= \n"
+       slice_set = STDIN.gets.to_s.chomp
+      if !(slice_set == 'end') then
+       slice_new = slice(options[:socket_dir]).create(slice_set)
+      end
+       host = nil 
+       while !(host == 'end') do 
+         puts "Input host name= \n"
+         host = STDIN.gets.to_s.chomp
+         slice(options[:socket_dir]).all.each do |slice|
+          if slice.name == args[0] then
+          slice.each do |port, mac_addresses|
+for num in 0 ... mac_addresses.length do
+          if mac_addresses[0] == host then
+         puts "nagatomi"
+             slice_new.add_port(dpid: port.fetch(:dpid), port_no: port.fetch(:port_no))
+             slice_new.add_mac_address(host,
+                            dpid: port.fetch(:dpid),
+                             port_no: port.fetch(:port_no))
+          end
+        end
+         end
+        end
+        end
+       end
+       end
+   slice(options[:socket_dir]).destroy(args.first)
+    end
+  end
+
+#add end
+
+#20161202ginnan add start
+  desc 'Merge a virtual slice'
+  arg_name 'name1'
+  arg_name 'name', :multiple
+  command :merge do |c|
+    c.desc 'Location to find socket files'
+    #c.switch [:into, :slice_divide]
+    c.desc 'MAC address'
+    c.flag [:m, :mac]
+    c.desc 'Switch port'
+    c.flag [:p, :port]
+    c.desc 'Slice name'
+    c.flag [:s, :slice]
+    c.flag [:S, :socket_dir], default_value: Trema::DEFAULT_SOCKET_DIR
+
+    c.action do |_global_options, options, args|
+      DRb.start_service
+      fail 'slice name is required.' if args.empty?
+      controller = Trema.trema_process('RoutingSwitch', options[:socket_dir]).controller
+      slice_new = slice(options[:socket_dir]).create(args[0])
+      slice(options[:socket_dir]).all.each do |slice|
+#puts "noinoi"
+         #for num in 1 ... args.length do
+#puts "noi"
+         #if slice.name == args[num] then
+          if slice.name == args[1] or slice.name == args[2] then
+             slice.each do |port, mac_addresses|
+               slice_new.add_port(dpid: port.fetch(:dpid), port_no: port.fetch(:port_no))
+          mac_addresses.each do |each|
+            slice.delete_mac_address(each,
+                           dpid: port.fetch(:dpid),
+                           port_no: port.fetch(:port_no))
+            slice_new.add_mac_address(each,
+                           dpid: port.fetch(:dpid),
+                           port_no: port.fetch(:port_no))
+               slice.delete_port(dpid: port.fetch(:dpid), port_no: port.fetch(:port_no))       
+          end
+#slice(options[:socket_dir]).destroy(slice.name) 
+         end
+#slice(options[:socket_dir]).destroy(arg[num])  
+        end
+  #     end#
+   #    end#
+       end 
+       slice(options[:socket_dir]).destroy(args[1]) 
+       slice(options[:socket_dir]).destroy(args[2])
+    end
+  end
+
+#add end
+
   desc 'Lists slices'
   command :list do |c|
     c.desc 'Location to find socket files'
