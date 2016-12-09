@@ -75,9 +75,36 @@ slice3
 
 ```
 
+2つ以上のスライス統合  
+```
+ensyuu2@ensyuu2-VirtualBox:~/sliceable-switch-team-w$ ./bin/slice list
+slice1
+  0x1:1
+    11:11:11:11:11:11
+slice2
+  0x4:1
+    22:22:22:22:22:22
+slice3
+  0x5:1
+    33:33:33:33:33:33
+slice4
+  0x6:1
+    44:44:44:44:44:44
+ensyuu2@ensyuu2-VirtualBox:~/sliceable-switch-team-w$ ./bin/slice merges slice10 slice1 slice2 slice3 slice4
+ensyuu2@ensyuu2-VirtualBox:~/sliceable-switch-team-w$ ./bin/slice list
+slice10
+  0x1:1
+    11:11:11:11:11:11
+  0x4:1
+    22:22:22:22:22:22
+  0x5:1
+    33:33:33:33:33:33
+  0x6:1
+    44:44:44:44:44:44
+
+```
 
 
 #まだ出来てない?追加できたらいいなと思ってるとこ
-* n個のスライスの統合(2個しかできない)
 * パス情報の保持（すべきかどうかは疑問）
 * MACでなく、hostネームを入力 (すべきかどうかは疑問)

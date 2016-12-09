@@ -70,7 +70,7 @@ module SliceApp
        slice_set = STDIN.gets.to_s.chomp
       if !(slice_set == 'end') then
        slice_new = slice(options[:socket_dir]).create(slice_set)
-      end
+      #end
        host = nil 
        while !(host == 'end') do 
          puts "Input host name= \n"
@@ -90,6 +90,7 @@ for num in 0 ... mac_addresses.length do
          end
         end
         end
+       end#
        end
        end
    slice(options[:socket_dir]).destroy(args.first)
@@ -144,6 +145,60 @@ for num in 0 ... mac_addresses.length do
        end 
        slice(options[:socket_dir]).destroy(args[1]) 
        slice(options[:socket_dir]).destroy(args[2])
+    end
+  end
+
+#add end
+
+
+#20161209ginnan add start
+  desc 'Merge a virtual slices'
+  arg_name 'name1'
+  arg_name 'name', :multiple
+  command :merges do |c|
+    c.desc 'Location to find socket files'
+    #c.switch [:into, :slice_divide]
+    c.desc 'MAC address'
+    c.flag [:m, :mac]
+    c.desc 'Switch port'
+    c.flag [:p, :port]
+    c.desc 'Slice name'
+    c.flag [:s, :slice]
+    c.flag [:S, :socket_dir], default_value: Trema::DEFAULT_SOCKET_DIR
+
+    c.action do |_global_options, options, args|
+      DRb.start_service
+      fail 'slice name is required.' if args.empty?
+      controller = Trema.trema_process('RoutingSwitch', options[:socket_dir]).controller
+      slice_new = slice(options[:socket_dir]).create(args[0])
+      slice(options[:socket_dir]).all.each do |slice|
+#puts "noinoi"
+         for num in 1 ... args.length do
+#puts "noi"
+         if slice.name == args[num] then
+          #if slice.name == args[1] or slice.name == args[2] then
+             slice.each do |port, mac_addresses|
+               slice_new.add_port(dpid: port.fetch(:dpid), port_no: port.fetch(:port_no))
+          mac_addresses.each do |each|
+            slice.delete_mac_address(each,
+                           dpid: port.fetch(:dpid),
+                           port_no: port.fetch(:port_no))
+            slice_new.add_mac_address(each,
+                           dpid: port.fetch(:dpid),
+                           port_no: port.fetch(:port_no))
+               slice.delete_port(dpid: port.fetch(:dpid), port_no: port.fetch(:port_no))       
+          end
+#slice(options[:socket_dir]).destroy(slice.name) 
+         end
+#slice(options[:socket_dir]).destroy(arg[num])  
+#slice(options[:socket_dir]).destroy(slice.name)
+        #end
+       end#
+       end#
+       end 
+       for num in 1 ... args.length do
+          slice(options[:socket_dir]).destroy(args[num])
+       end
     end
   end
 
