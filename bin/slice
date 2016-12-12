@@ -18,6 +18,10 @@ module SliceApp
     Trema.trema_process('RoutingSwitch', socket_dir).controller.slice
   end
 
+  def self.update_slice(socket_dir)
+    Trema.trema_process('RoutingSwitch', socket_dir).controller.update_slice
+  end
+
   desc 'Creates a new virtual slice'
   arg_name 'name'
   command :add do |c|
@@ -27,6 +31,7 @@ module SliceApp
     c.action do |_global_options, options, args|
       fail 'slice name is required.' if args.empty?
       slice(options[:socket_dir]).create(args.first)
+      update_slice(options[:socket_dir])
     end
   end
 
@@ -39,6 +44,7 @@ module SliceApp
     c.action do |_global_options, options, args|
       fail 'slice name is required.' if args.empty?
       slice(options[:socket_dir]).destroy(args.first)
+      update_slice(options[:socket_dir])
     end
   end
 
@@ -64,36 +70,35 @@ module SliceApp
       controller = Trema.trema_process('RoutingSwitch', options[:socket_dir]).controller
       #slice_new = slice(options[:socket_dir]).create(args[0])
       slice_set = nil
-
       while !(slice_set == 'end') do
-       puts "Input slice name= \n"
-       slice_set = STDIN.gets.to_s.chomp
-      if !(slice_set == 'end') then
-       slice_new = slice(options[:socket_dir]).create(slice_set)
-      #end
-       host = nil 
-       while !(host == 'end') do 
-         puts "Input host name= \n"
-         host = STDIN.gets.to_s.chomp
-         slice(options[:socket_dir]).all.each do |slice|
-          if slice.name == args[0] then
-          slice.each do |port, mac_addresses|
-for num in 0 ... mac_addresses.length do
-          if mac_addresses[0] == host then
-         puts "nagatomi"
-             slice_new.add_port(dpid: port.fetch(:dpid), port_no: port.fetch(:port_no))
-             slice_new.add_mac_address(host,
-                            dpid: port.fetch(:dpid),
-                             port_no: port.fetch(:port_no))
+        puts "Input slice name= \n"
+        slice_set = STDIN.gets.to_s.chomp
+        if !(slice_set == 'end') then
+          slice_new = slice(options[:socket_dir]).create(slice_set)
+          host = nil
+          while !(host == 'end') do 
+            puts "Input host name= \n"
+            host = STDIN.gets.to_s.chomp
+            slice(options[:socket_dir]).all.each do |slice|
+              if slice.name == args[0] then
+                slice.each do |port, mac_addresses|
+                  for num in 0 ... mac_addresses.length do
+                    if mac_addresses[0] == host then
+                      puts "nagatomi"
+                      slice_new.add_port(dpid: port.fetch(:dpid), port_no: port.fetch(:port_no))
+                      slice_new.add_mac_address(host,
+                                                dpid: port.fetch(:dpid),
+                                                port_no: port.fetch(:port_no))
+                    end
+                  end
+                end
+              end
+            end
           end
         end
-         end
-        end
-        end
-       end#
-       end
-       end
-   slice(options[:socket_dir]).destroy(args.first)
+      end
+      slice(options[:socket_dir]).destroy(args.first)
+      update_slice(options[:socket_dir])
     end
   end
 
@@ -145,6 +150,7 @@ for num in 0 ... mac_addresses.length do
        end 
        slice(options[:socket_dir]).destroy(args[1]) 
        slice(options[:socket_dir]).destroy(args[2])
+       update_slice(options[:socket_dir])
     end
   end
 
@@ -173,32 +179,33 @@ for num in 0 ... mac_addresses.length do
       slice_new = slice(options[:socket_dir]).create(args[0])
       slice(options[:socket_dir]).all.each do |slice|
 #puts "noinoi"
-         for num in 1 ... args.length do
+        for num in 1 ... args.length do
 #puts "noi"
-         if slice.name == args[num] then
-          #if slice.name == args[1] or slice.name == args[2] then
-             slice.each do |port, mac_addresses|
-               slice_new.add_port(dpid: port.fetch(:dpid), port_no: port.fetch(:port_no))
-          mac_addresses.each do |each|
-            slice.delete_mac_address(each,
-                           dpid: port.fetch(:dpid),
-                           port_no: port.fetch(:port_no))
-            slice_new.add_mac_address(each,
-                           dpid: port.fetch(:dpid),
-                           port_no: port.fetch(:port_no))
-               slice.delete_port(dpid: port.fetch(:dpid), port_no: port.fetch(:port_no))       
-          end
-#slice(options[:socket_dir]).destroy(slice.name) 
-         end
+          if slice.name == args[num] then
+            #if slice.name == args[1] or slice.name == args[2] then
+            slice.each do |port, mac_addresses|
+              slice_new.add_port(dpid: port.fetch(:dpid), port_no: port.fetch(:port_no))
+              mac_addresses.each do |each|
+                slice.delete_mac_address(each,
+                                         dpid: port.fetch(:dpid),
+                                         port_no: port.fetch(:port_no))
+                slice_new.add_mac_address(each,
+                                          dpid: port.fetch(:dpid),
+                                          port_no: port.fetch(:port_no))
+                slice.delete_port(dpid: port.fetch(:dpid), port_no: port.fetch(:port_no))       
+              end
+#slice(opions[:socket_dir]).destroy(slice.name) 
+            end
 #slice(options[:socket_dir]).destroy(arg[num])  
 #slice(options[:socket_dir]).destroy(slice.name)
-        #end
-       end#
-       end#
-       end 
-       for num in 1 ... args.length do
-          slice(options[:socket_dir]).destroy(args[num])
-       end
+             #end
+          end
+        end
+      end 
+      for num in 1 ... args.length do
+        slice(options[:socket_dir]).destroy(args[num])
+      end
+      update_slice(options[:socket_dir])
     end
   end
 
@@ -239,6 +246,7 @@ for num in 0 ... mac_addresses.length do
       slice(options[:socket_dir]).
         find_by!(name: options[:slice]).
         add_port(dpid: port.fetch(:dpid), port_no: port.fetch(:port_no))
+      update_slice(options[:socket_dir])
     end
   end
 
@@ -258,6 +266,7 @@ for num in 0 ... mac_addresses.length do
       slice(options[:socket_dir]).
         find_by!(name: options[:slice]).
         delete_port(dpid: port.fetch(:dpid), port_no: port.fetch(:port_no))
+      update_slice(options[:socket_dir])
     end
   end
 
@@ -281,6 +290,7 @@ for num in 0 ... mac_addresses.length do
         find_by!(name: options[:slice]).
         add_mac_address(options[:mac],
                         dpid: port.fetch(:dpid), port_no: port.fetch(:port_no))
+      update_slice(options[:socket_dir])
     end
   end
 
@@ -305,6 +315,7 @@ for num in 0 ... mac_addresses.length do
         delete_mac_address(options[:mac],
                            dpid: port.fetch(:dpid),
                            port_no: port.fetch(:port_no))
+      update_slice(options[:socket_dir])
     end
   end
 

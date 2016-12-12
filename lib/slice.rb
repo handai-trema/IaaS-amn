@@ -133,7 +133,13 @@ class Slice
   end
 
   def to_json(*_)
-    %({"name": "#{@name}"})
+    host = []
+    @ports.keys.each do |key|
+      @ports[key].each do |each| 
+        host << each.to_s
+      end
+    end
+    %({"name": "#{@name}", "host": #{host}})
   end
 
   def method_missing(method, *args, &block)
