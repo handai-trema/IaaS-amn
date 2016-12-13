@@ -28,16 +28,10 @@ class RoutingSwitch < Trema::Controller
     Slice
   end
 
-  def update_slice
-#ここでトポロジに追加する
-    @topology.update_slice(Slice.all)
-  end
-
   def start(args)
     @options = Options.new(args)
     @path_manager = start_path_manager
     @topology = start_topology
-    @path_manager.add_observer @topology
     logger.info 'Routing Switch started.'
   end
 
