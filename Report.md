@@ -237,7 +237,7 @@ slice10
 allを選択すると全てのスライス情報が表示される。
 ここでは、ラジオボタンを用いることで複数の項目にチェックがつかないように実装した。
 
-ラジオボタンの各項目の作成は以下のDraw_network.js中の関数createRadioButtonで実行される。
+ラジオボタンの各項目の作成は以下の[javascript/Draw_network.js](https://github.com/handai-trema/sliceable-switch-team-w/blob/develop/javascript/Draw_network.js)中の関数createRadioButtonで実行される。
 4行目のfor文の処理によりスライスの数が変動した場合にも対応している。
 
 ```
@@ -323,7 +323,49 @@ slice1に属するMACアドレス11:11:11:11:11:11と44:44:44:44:44:44のホス�
 |:------------------------------------------------------------------------------------------------------------:|  
 |                                   図 3 slice2選択時のトポロジ画像                                               |  
 
-###Rset APIの実装
+###REST APIの実装
+
+[lib/rest_api.rb](https://github.com/handai-trema/sliceable-switch-team-w/blob/develop/lib/rest_api.rb)を変更して、APIを用いたスライスのマージを実装した。
+下記の部分をrest_api.rbに追加した。
+
+```
+  desc 'Merge slices.'
+  params do
+    requires :new_slice, type: String, desc: 'Slice ID.'
+    requires :a_slice, type: String, desc: 'Slice ID.'
+    requires :b_slice, type: String, desc: 'Slice ID.'
+  end
+  post 'slices/:new_slice' do
+    rest_api do 
+      DRb.start_service#
+      Slice.create params[:new_slice]
+      puts Slice.find_by!(name: params[:a_slice])
+      puts "a", Slice.find_by!(name: params[:a_slice]).ports
+      puts Slice.find_by!(name: params[:b_slice])
+      puts "b", Slice.find_by!(name: params[:b_slice]).ports
+      Slice.find_by!(name: params[:a_slice]).each do |port, mac_addresses|#
+        Slice.find_by!(name: params[:new_slice]).add_port(port)
+        mac_addresses.each do |mac|
+          Slice.find_by!(name: params[:new_slice]).add_mac_address(mac, port)
+        end
+      end
+      Slice.find_by!(name: params[:b_slice]).each do |port, mac_addresses|#
+        Slice.find_by!(name: params[:new_slice]).add_port(port)
+        mac_addresses.each do |mac|
+          Slice.find_by!(name: params[:new_slice]).add_mac_address(mac, port)
+        end
+      end
+      Slice.destroy params[:a_slice]
+      Slice.destroy params[:b_slice]
+    end
+  end
+```
+
+2から5行目では、コマンドで与えなくてはならない引数の設定をしている。
+APIを用いたスライスの統合では、マージ後のスライス名、マージする2つのスライス名を引数として与える必要がある。
+9行目では、マージ後のスライスを作成している。
+14行目から25行目では、マージ前のスライスに属するホストをマージ後のスライスに追加している。
+26，27行目では、マージ前の2つのスライスを破棄している。
 
 ####コマンドの実行
 
