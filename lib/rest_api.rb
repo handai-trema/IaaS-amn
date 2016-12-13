@@ -71,6 +71,39 @@ class RestApi < Grape::API
     rest_api { Slice.find_by!(name: params[:slice_id]) }
   end
 
+##ginnan add start
+  desc 'Merge slices.'
+  params do
+    requires :new_slice, type: String, desc: 'Slice ID.'
+    requires :a_slice, type: String, desc: 'Slice ID.'
+    requires :b_slice, type: String, desc: 'Slice ID.'
+  end
+  post 'slices/:new_slice' do
+    rest_api do 
+      DRb.start_service#
+      Slice.create params[:new_slice]
+      puts Slice.find_by!(name: params[:a_slice])
+      puts "a", Slice.find_by!(name: params[:a_slice]).ports
+      puts Slice.find_by!(name: params[:b_slice])
+      puts "b", Slice.find_by!(name: params[:b_slice]).ports
+      Slice.find_by!(name: params[:a_slice]).each do |port, mac_addresses|#
+        Slice.find_by!(name: params[:new_slice]).add_port(port)
+        mac_addresses.each do |mac|
+          Slice.find_by!(name: params[:new_slice]).add_mac_address(mac, port)
+        end
+      end
+      Slice.find_by!(name: params[:b_slice]).each do |port, mac_addresses|#
+        Slice.find_by!(name: params[:new_slice]).add_port(port)
+        mac_addresses.each do |mac|
+          Slice.find_by!(name: params[:new_slice]).add_mac_address(mac, port)
+        end
+      end
+      Slice.destroy params[:a_slice]
+      Slice.destroy params[:b_slice]
+    end
+  end
+#ginnnan add end
+
   desc 'Adds a port to a slice.'
   params do
     requires :slice_id, type: String, desc: 'Slice ID.'
@@ -116,6 +149,8 @@ class RestApi < Grape::API
         find_port(Port.parse(params[:port_id]))
     end
   end
+
+
 
   desc 'Adds a host to a slice.'
   params do

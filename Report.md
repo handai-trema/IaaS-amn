@@ -252,7 +252,7 @@ var createRadioButton = function() {
 ```
 
 ラジオボタンの生成後は下記の関数onRadioButtonChangeで、ラジオボタンの状態確認及びスライスの表示を行う。
-3から5行目では、ラジオボタンのon/off状態をcheck配列に格納して、ラジオボタンの状態を確認している。
+3から5行目では、ラジオボタンのon/off状態を配列checkに格納して、ラジオボタンの状態を確認している。
 7から17行目では、allを選択した場合のホスト表示処理を行っている。
 対して、18から29行目では、各スライスを選択した場合のホスト表示処理を行っている。
 
@@ -323,5 +323,147 @@ slice1に属するMACアドレス11:11:11:11:11:11と44:44:44:44:44:44のホス�
 |:------------------------------------------------------------------------------------------------------------:|  
 |                                   図 3 slice2選択時のトポロジ画像                                               |  
 
+###Rset APIの実装
 
+####コマンドの実行
+
+まず、下記のコマンドを実行してtremaによる仮想ネットワークを起動した。
+```
+ensyuu2@ensyuu2-VirtualBox:~/week8/sliceable-switch-team-w$ ./bin/trema run lirouting_switch.rb -c trema.conf -- --slicing
+```
+
+次に、別の端末で下記のコマンドを実行してサーバを起動した。
+```
+ensyuu2@ensyuu2-VirtualBox:~/week8/sliceable-switch-team-w$ ./bin/rackup
+```
+
+もう1つ別の端末で下記のコマンドを実行することで、2つのスライスa,bを作成した。
+また、それぞれのスライスにMACアドレス11:11:11:11:11:11、22:22:22:22:22:22を持つホストを追加した。
+
+```
+ensyuu2@ensyuu2-VirtualBox:~/week8/sliceable-switch-team-w$ curl -sS -X POST -d '{"name": "a"}' 'http://localhost:9292/slices' -H Content-Type:application/json -v
+* Hostname was NOT found in DNS cache
+*   Trying 127.0.0.1...
+* Connected to localhost (127.0.0.1) port 9292 (#0)
+> POST /slices HTTP/1.1
+> User-Agent: curl/7.35.0
+> Host: localhost:9292
+> Accept: */*
+> Content-Type:application/json
+> Content-Length: 13
+> 
+* upload completely sent off: 13 out of 13 bytes
+< HTTP/1.1 201 Created 
+< Content-Type: application/json
+< Content-Length: 25
+* Server WEBrick/1.3.1 (Ruby/2.2.1/2015-02-26) is not blacklisted
+< Server: WEBrick/1.3.1 (Ruby/2.2.1/2015-02-26)
+< Date: Tue, 13 Dec 2016 11:07:15 GMT
+< Connection: Keep-Alive
+< 
+* Connection #0 to host localhost left intact
+{"name": "a", "host": []}
+ensyuu2@ensyuu2-VirtualBox:~/week8/sliceable-switch-tea'{"name": "b"}' 'http://localhost:9292/slices' -H Content-Type:application/json -v
+* Hostname was NOT found in DNS cache
+*   Trying 127.0.0.1...
+* Connected to localhost (127.0.0.1) port 9292 (#0)
+> POST /slices HTTP/1.1
+> User-Agent: curl/7.35.0
+> Host: localhost:9292
+> Accept: */*
+> Content-Type:application/json
+> Content-Length: 13
+> 
+* upload completely sent off: 13 out of 13 bytes
+< HTTP/1.1 201 Created 
+< Content-Type: application/json
+< Content-Length: 25
+* Server WEBrick/1.3.1 (Ruby/2.2.1/2015-02-26) is not blacklisted
+< Server: WEBrick/1.3.1 (Ruby/2.2.1/2015-02-26)
+< Date: Tue, 13 Dec 2016 11:09:20 GMT
+< Connection: Keep-Alive
+< 
+* Connection #0 to host localhost left intact
+{"name": "b", "host": []}
+ensyuu2@ensyuu2-VirtualBox:~/week8/sliceable-switch-tea'{"name": "11:11:11:11:11:11"}' 'http://localhost:9292/slices/a/ports/0x1:1/mac_addresses' -H Content-Type:application/json -v
+* Hostname was NOT found in DNS cache
+*   Trying 127.0.0.1...
+* Connected to localhost (127.0.0.1) port 9292 (#0)
+> POST /slices/a/ports/0x1:1/mac_addresses HTTP/1.1
+> User-Agent: curl/7.35.0
+> Host: localhost:9292
+> Accept: */*
+> Content-Type:application/json
+> Content-Length: 29
+> 
+* upload completely sent off: 29 out of 29 bytes
+< HTTP/1.1 201 Created 
+< Content-Type: application/json
+< Content-Length: 31
+* Server WEBrick/1.3.1 (Ruby/2.2.1/2015-02-26) is not blacklisted
+< Server: WEBrick/1.3.1 (Ruby/2.2.1/2015-02-26)
+< Date: Tue, 13 Dec 2016 11:10:13 GMT
+< Connection: Keep-Alive
+< 
+* Connection #0 to host localhost left intact
+[{"name": "11:11:11:11:11:11"}]
+ensyuu2@ensyuu2-VirtualBox:~/week8/sliceable-swit'{"name": "22:22:22:22:22:22"}' 'http://localhost:9292/slices/b/ports/0x2:2/mac_addresses' -H Content-Type:application/json -v
+* Hostname was NOT found in DNS cache
+*   Trying 127.0.0.1...
+* Connected to localhost (127.0.0.1) port 9292 (#0)
+> POST /slices/b/ports/0x2:2/mac_addresses HTTP/1.1
+> User-Agent: curl/7.35.0
+> Host: localhost:9292
+> Accept: */*
+> Content-Type:application/json
+> Content-Length: 29
+> 
+* upload completely sent off: 29 out of 29 bytes
+< HTTP/1.1 201 Created 
+< Content-Type: application/json
+< Content-Length: 31
+* Server WEBrick/1.3.1 (Ruby/2.2.1/2015-02-26) is not blacklisted
+< Server: WEBrick/1.3.1 (Ruby/2.2.1/2015-02-26)
+< Date: Tue, 13 Dec 2016 11:10:44 GMT
+< Connection: Keep-Alive
+< 
+* Connection #0 to host localhost left intact
+[{"name": "22:22:22:22:22:22"}]
+```
+
+ブラウザを用いてhttp://localhost:9292/slices/にアクセスした。
+ページには、```[{"name": "a", "host": ["11:11:11:11:11:11"]},{"name": "b", "host": ["22:22:22:22:22:22"]}]```と表示されていた。
+このことから正常に2つのスライスa,bが作成されていて、ホストの追加もされていることが分かる。
+
+コマンド```curl -sS -X POST -d '{"new_slice":"[new_slice_name]", "a_slice":"[old_slice_name_A]", "b_slice":"[old_slice_name_B]"}' '[new_slice_address]' -H Content-Type:application/json -v ```を実行することで2つのスライスをマージすることができる。
+コマンド```curl -sS -X POST -d '{"new_slice":"c", "a_slice":"a", "b_slice":"b"}' 'http://localhost:9292/slices/c' -H Content-Type:application/json -v```を実行して、2つのスライスa,bをマージして新しいスライスcを作成する。
+端末上の実行結果は以下のようになった。
+
+```
+ensyuu2@ensyuu2-VirtualBox:~/week8/sliceable-swit'{"new_slice":"c", "a_slice":"a", "b_slice":"b"}' 'http://localhost:9292/slices/c' -H Content-Type:application/json -v
+* Hostname was NOT found in DNS cache
+*   Trying 127.0.0.1...
+* Connected to localhost (127.0.0.1) port 9292 (#0)
+> POST /slices/c HTTP/1.1
+> User-Agent: curl/7.35.0
+> Host: localhost:9292
+> Accept: */*
+> Content-Type:application/json
+> Content-Length: 47
+> 
+* upload completely sent off: 47 out of 47 bytes
+< HTTP/1.1 201 Created 
+< Content-Type: application/json
+< Content-Length: 67
+* Server WEBrick/1.3.1 (Ruby/2.2.1/2015-02-26) is not blacklisted
+< Server: WEBrick/1.3.1 (Ruby/2.2.1/2015-02-26)
+< Date: Tue, 13 Dec 2016 11:11:34 GMT
+< Connection: Keep-Alive
+< 
+* Connection #0 to host localhost left intact
+[{"name": "c", "host": ["11:11:11:11:11:11", "22:22:22:22:22:22"]}]
+```
+
+また、ブラウザを用いてhttp://localhost:9292/slicesにアクセスした。
+ページには```[{"name": "c", "host": ["11:11:11:11:11:11", "22:22:22:22:22:22"]}]```と表示されており、2つのスライスa,bがマージされていることが分かる。
 
