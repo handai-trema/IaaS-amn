@@ -231,3 +231,23 @@ slice10
 
 以上より、4つのスライスが結合されていることがわかる。
 
+###スライスの可視化
+ラジオボタンを用いてスライスの可視化を実装した。
+各スライスのラジオボタンを選択すると選択したスライスに属するホストの背景に色がつき、各スライスが表示される。
+allを選択すると全てのスライス情報が表示される。
+
+各ラジオボタンの作成は以下のDraw_network.js中の関数createRadioButtonで実行される。
+4行目のfor文の処理によりスライスの数が増加した場合に対応している。
+
+```
+var createRadioButton = function() {
+    if (pre_data[0].slices == []) {return}
+    var str = '<input id="Radio0" name="RadioGroup1" type="radio" onchange="onRadioButtonChange();" /> <label for="Radio1">all</label><br/>';
+    for ( var i = 0; i < pre_data[0].slices.length; i++ ) {
+    str = str + '<input id="Radio' + String(i+1) + '" name="RadioGroup1" type="radio" onchange="onRadioButtonChange();" /> <label for="Radio1">' + pre_data[0].slices[i].name + '</label><br/>';
+    }
+    document.getElementById('radiobutton').innerHTML = '<form name="form1" action="">' + str +  '</form>';
+  };
+```
+
+ラジオボタンの生成後は
