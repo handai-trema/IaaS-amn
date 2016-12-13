@@ -250,4 +250,41 @@ var createRadioButton = function() {
   };
 ```
 
-ラジオボタンの生成後は
+ラジオボタンの生成後は下記の関数onRadioButtonChangeで、ラジオボタンの状態確認及びスライスの表示を行う。
+3から5行目では、ラジオボタンのon/off状態をcheck配列に格納して、ラジオボタンの状態を確認している。
+7から17行目では、allを選択した場合のホスト表示処理を行っている。
+対して、18から29行目では、各スライスを選択した場合のホスト表示処理を行っている。
+
+```
+function onRadioButtonChange() {
+  var check = [];
+  for (var i = 0; i < pre_data[0].slices.length+1; i++){
+    check[i] = eval("document.form1.Radio" + String(i) + ".checked");
+  }
+  var target = document.getElementById("output");
+  if (check[0] == true) {
+    var host_s = {};
+    for (var i = 0; i < pre_data[0].slices.length; i++){
+      for (var j = 0; j < pre_data[0].hosts.length; j++){
+        if ($.inArray(pre_data[0].hosts[j].label, pre_data[0].slices[i].host) >= 0){
+          nodes.update([{id:pre_data[0].hosts[j].id, image: './html_images/computer_laptop_slice' + String(i+1) +'.png'}]);
+        }
+      }
+    }
+        target.innerHTML = JSON.stringify(host_s, null, 4);
+  }
+  for (var i = 0; i < pre_data[0].slices.length; i++){
+    if (check[i+1] == true) {
+      for (var j = 0; j < pre_data[0].hosts.length; j++){
+        if ($.inArray(pre_data[0].hosts[j].label, pre_data[0].slices[i].host) >= 0){
+          nodes.update([{id:pre_data[0].hosts[j].id, image: './html_images/computer_laptop_slice' + String(i+1) +'.png'}]);
+        }else{
+          nodes.update([{id:pre_data[0].hosts[j].id, image: './html_images/computer_laptop.png'}]);
+        }
+      }
+      target.innerHTML = JSON.stringify(pre_data[0].slices[i].host, null, 4);
+    }
+  }
+};
+```
+
