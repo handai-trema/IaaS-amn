@@ -20,7 +20,7 @@ module View
       end
       i = 0
       hosts = topology.hosts.each_with_object({}) do |each, tmp|
-        tmp[i] = { "id"=> 100+i, "label"=> each[0].to_s }
+        tmp[i] = { "id"=> 100+i, "label"=> each[1].to_s }
         i += 1
       end
       i = 0
