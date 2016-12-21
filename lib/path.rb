@@ -80,7 +80,11 @@ class Path < Trema::Controller
   end
 
   def exact_match(in_port)
-    ExactMatch.new(@packet_in).tap { |match| match.in_port = in_port }
+    #ExactMatch.new(@packet_in).tap { |match| match.in_port = in_port }
+    Match.new({
+                destination_ip_address: @packet_in.destination_ip_address,
+                ether_type: 0x0800
+              })
   end
 
   def path

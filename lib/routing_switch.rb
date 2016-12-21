@@ -38,6 +38,8 @@ class RoutingSwitch < Trema::Controller
     @path_manager = start_path_manager
     @topology = start_topology
     @path_manager.add_observer @topology
+    #Arpテーブル
+    @arp_table = ArpTable.new
     logger.info 'Routing Switch started.'
   end
 
@@ -47,8 +49,36 @@ class RoutingSwitch < Trema::Controller
   delegate :port_modify, to: :@topology
 
   def packet_in(dpid, packet_in)
-    @topology.packet_in(dpid, packet_in)
+    @topology.packet_in(dpid, packet_in) if packet_in.lldp? ||
+      packet_in.ether_type == "0x0806" || (packet_in.ether_type == "0x0800" && packet_in.source_ip_address.to_s != "0.0.0.0")
     @path_manager.packet_in(dpid, packet_in) unless packet_in.lldp?
+    #Arp解決
+    case packet_in.data
+    when Arp::Request
+      packet_in_arp_request dpid, packet_in.in_port, packet_in.data
+    when Arp::Reply
+      packet_in_arp_reply dpid, packet_in
+    end
+  end
+
+  def packet_in_arp_request(dpid, in_port, arp_request)
+    #ホストの情報をfind_by
+    dest_host = "00:00:00:00:00:00:00:00"
+
+    send_packet_out(
+                    dpid,
+                    raw_data: Arp::Reply.new(destination_mac: arp_request.source_mac,
+                                             source_mac: dest_host
+                                             sender_protocol_address: arp_request.target_protocol_address,
+                                             target_protocol_address: arp_request.sender_protocol_address
+                                             ).to_binary,
+                    actions: SendOutPort.new(in_port))
+  end
+
+  def packet_in_arp_reply(dpid, packet_in)
+    @arp_table.update(packet_in.in_port,
+                      packet_in.sender_protocol_address,
+                      packet_in.source_mac)
   end
 
   private
