@@ -61,18 +61,24 @@ class RoutingSwitch < Trema::Controller
     end
   end
 
-  def packet_in_arp_request(dpid, in_port, arp_request)
-    #ホストの情報をfind_by
-    dest_host = "00:00:00:00:00:00:00:00"
-
-    send_packet_out(
-                    dpid,
-                    raw_data: Arp::Reply.new(destination_mac: arp_request.source_mac,
-                                             source_mac: dest_host
-                                             sender_protocol_address: arp_request.target_protocol_address,
-                                             target_protocol_address: arp_request.sender_protocol_address
-                                             ).to_binary,
-                    actions: SendOutPort.new(in_port))
+  def packet_in_arp_request(dpid, in_port, packet_in)
+    #Arpリクエスト元の情報をarpテーブルに登録
+    @arp_table.update(packet_in.in_port,
+                      packet_in.sender_protocol_address,
+                      packet_in.source_mac)
+    #宛先ホストのmacアドレスをarpテーブルから探す
+    arp_request = packet_in.data
+    if lookup(packet_in.sender_protocol_address)
+      dest_host_mac_address = lookup(packet_in.sender_protocol_address)
+      send_packet_out(
+                      dpid,
+                      raw_data: Arp::Reply.new(destination_mac: arp_request.source_mac,
+                                               source_mac: dest_host_mac_address,
+                                               sender_protocol_address: arp_request.target_protocol_address,
+                                               target_protocol_address: arp_request.sender_protocol_address
+                                               ).to_binary,
+                      actions: SendOutPort.new(in_port))
+    end
   end
 
   def packet_in_arp_reply(dpid, packet_in)
