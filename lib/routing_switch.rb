@@ -2,9 +2,10 @@ $LOAD_PATH.unshift File.join(__dir__, '../vendor/topology/lib')
 
 require 'active_support/core_ext/module/delegation'
 require 'optparse'
-require 'path_in_slice_manager'
 require 'path_manager'
+require 'path_in_slice_manager'
 require 'topology_controller'
+require 'arp_table'
 
 # L2 routing switch
 class RoutingSwitch < Trema::Controller
