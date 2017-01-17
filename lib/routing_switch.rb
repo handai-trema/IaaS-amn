@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
+$:.unshift File.dirname(__FILE__)
 $LOAD_PATH.unshift File.join(__dir__, '../vendor/topology/lib')
 
 require 'active_support/core_ext/module/delegation'
 require 'optparse'
-require 'path_manager'
 require 'path_in_slice_manager'
+require 'path_manager'
 require 'topology_controller'
 require 'arp_table'
 
@@ -42,6 +44,7 @@ class RoutingSwitch < Trema::Controller
     #Arpテーブル
     @arp_table = ArpTable.new
     logger.info 'Routing Switch started.'
+    puts "arp"
   end
 
   delegate :switch_ready, to: :@topology
@@ -50,6 +53,7 @@ class RoutingSwitch < Trema::Controller
   delegate :port_modify, to: :@topology
 
   def packet_in(dpid, packet_in)
+    puts "packet_in"
     @topology.packet_in(dpid, packet_in) if packet_in.lldp? ||
       packet_in.ether_type == "0x0806" || (packet_in.ether_type == "0x0800" && packet_in.source_ip_address.to_s != "0.0.0.0")
     @path_manager.packet_in(dpid, packet_in) unless packet_in.lldp?
@@ -63,6 +67,7 @@ class RoutingSwitch < Trema::Controller
   end
 
   def packet_in_arp_request(dpid, in_port, packet_in)
+    puts "arp_request"
     #Arpリクエスト元の情報をarpテーブルに登録
     @arp_table.update(packet_in.in_port,
                       packet_in.sender_protocol_address,
@@ -83,6 +88,7 @@ class RoutingSwitch < Trema::Controller
   end
 
   def packet_in_arp_reply(dpid, packet_in)
+    puts "arp_reply"
     @arp_table.update(packet_in.in_port,
                       packet_in.sender_protocol_address,
                       packet_in.source_mac)
