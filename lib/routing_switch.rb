@@ -44,7 +44,6 @@ class RoutingSwitch < Trema::Controller
     #Arpテーブル
     @arp_table = ArpTable.new
     logger.info 'Routing Switch started.'
-    puts "arp"
   end
 
   delegate :switch_ready, to: :@topology
@@ -53,7 +52,6 @@ class RoutingSwitch < Trema::Controller
   delegate :port_modify, to: :@topology
 
   def packet_in(dpid, packet_in)
-    puts "packet_in"
     @topology.packet_in(dpid, packet_in) if packet_in.lldp? ||
       packet_in.ether_type == "0x0806" || (packet_in.ether_type == "0x0800" && packet_in.source_ip_address.to_s != "0.0.0.0")
     @path_manager.packet_in(dpid, packet_in) unless packet_in.lldp?
@@ -69,19 +67,20 @@ class RoutingSwitch < Trema::Controller
   def packet_in_arp_request(dpid, in_port, packet_in)
     puts "arp_request"
     #Arpリクエスト元の情報をarpテーブルに登録
-    @arp_table.update(packet_in.in_port,
+    @arp_table.update(in_port,
                       packet_in.sender_protocol_address,
                       packet_in.source_mac)
     #宛先ホストのmacアドレスをarpテーブルから探す
-    arp_request = packet_in.data
-    if lookup(packet_in.sender_protocol_address)
-      dest_host_mac_address = lookup(packet_in.sender_protocol_address)
+    if @arp_table.lookup(packet_in.sender_protocol_address)
+      dest_host_mac_address = @arp_table.lookup(packet_in.sender_protocol_address).mac_address
+      print "dest_mac: #{dest_host_mac_address}\n"
+      print "source_mac: #{packet_in.source_mac}\n"
       send_packet_out(
                       dpid,
-                      raw_data: Arp::Reply.new(destination_mac: arp_request.source_mac,
-                                               source_mac: dest_host_mac_address,
-                                               sender_protocol_address: arp_request.target_protocol_address,
-                                               target_protocol_address: arp_request.sender_protocol_address
+                      raw_data: Arp::Reply.new(destination_mac: dest_host_mac_address,
+                                               source_mac: packet_in.source_mac,
+                                               sender_protocol_address: packet_in.target_protocol_address,
+                                               target_protocol_address: packet_in.sender_protocol_address
                                                ).to_binary,
                       actions: SendOutPort.new(in_port))
     end
