@@ -181,7 +181,7 @@ print "debugtest"
 
 ###########################################################################
     #return str
-return 'Content-type: text/html \n \n<html><head></head><body>It works!!!</body></html>'
+return 'Content-type: text/html'+ \n + \n + '<html><head></head><body>It works!!!</body></html>'
     end
   end
 
