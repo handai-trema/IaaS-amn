@@ -3,7 +3,7 @@ var nodes;
 var edges;
 var network;
 
-$(function(){
+function update_topology(){
   var jsonFilePath = 'tmp/topology.json';
   var EDGE_LENGTH = 150;
   
@@ -18,7 +18,7 @@ $(function(){
 network.setOptions(options);
     click();
     createRadioButton();
-  }
+  };
 
   var checkObjDiff = function(object1, object2) {
     // objectの中身をjson化する
@@ -30,7 +30,7 @@ network.setOptions(options);
     } else {
       return true; // 差分があればtrue
     }
-  }
+  };
 
   var afterInit = function(jsonData) {
     console.log('afterInit', jsonData);
@@ -84,7 +84,7 @@ network.setOptions(options);
     });
   };
   setInterval(init,1000);
-});
+}
 
 var click = function() {
   network.on("click", function (params) {
@@ -161,8 +161,7 @@ var click = function() {
   };
 
   var pathConvertedMacToId = function(path, hosts) {
-    //pathのMACをIDに変換して返す
-　　　 var new_path = new Array(path.length);
+    var new_path = new Array(path.length);
     for(var i=0; i<hosts.length; i++){
       if( hosts[i].label == path[0] ){ new_path[0] = hosts[i].id; }
       if( hosts[i].label == path[path.length-1] ){ new_path[path.length-1] = hosts[i].id; }
@@ -186,8 +185,7 @@ var click = function() {
       }
     }
   };
-
-};
+}
 
 var createRadioButton = function() {
     if (pre_data[0].slices == []) {return}
@@ -233,3 +231,13 @@ function onRadioButtonChange() {
 };
 
 
+$(function(){
+  $('#show').on("click", function(){
+    console.log("click");
+    $.post('http://localhost:9292/api/status',"",
+      function(data){
+        console.log(data);
+      }
+    )
+  });
+});
