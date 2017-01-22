@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'grape'
 require 'port'
 require 'slice_exceptions'
@@ -42,164 +43,54 @@ class RestApi < Grape::API
     end
   end
 
-  desc 'Creates a slice.'
+  desc 'Create Container.'
   params do
-    requires :name, type: String, desc: 'Slice ID.'
+    requires :name, type: String, desc: 'Container_ name.'
+    requires :con_num, type: Integer, desc: 'Container_num.'
   end
-  post :slices do
-    rest_api { Slice.create params[:name] }
-  end
-
-  desc 'Deletes a slice.'
-  params do
-    requires :name, type: String, desc: 'Slice ID.'
-  end
-  delete :slices do
-    rest_api { Slice.destroy params[:name] }
-  end
-
-  desc 'Lists slices.'
-  get :slices do
-    rest_api { Slice.all }
-  end
-
-  desc 'Shows a slice.'
-  params do
-    requires :slice_id, type: String, desc: 'Slice ID.'
-  end
-  get 'slices/:slice_id' do
-    rest_api { Slice.find_by!(name: params[:slice_id]) }
-  end
-
-##ginnan add start
-  desc 'Merge slices.'
-  params do
-    requires :new_slice, type: String, desc: 'Slice ID.'
-    requires :a_slice, type: String, desc: 'Slice ID.'
-    requires :b_slice, type: String, desc: 'Slice ID.'
-  end
-  post 'slices/:new_slice' do
-    rest_api do 
-      DRb.start_service#
-      Slice.create params[:new_slice]
-      puts Slice.find_by!(name: params[:a_slice])
-      puts "a", Slice.find_by!(name: params[:a_slice]).ports
-      puts Slice.find_by!(name: params[:b_slice])
-      puts "b", Slice.find_by!(name: params[:b_slice]).ports
-      Slice.find_by!(name: params[:a_slice]).each do |port, mac_addresses|#
-        Slice.find_by!(name: params[:new_slice]).add_port(port)
-        mac_addresses.each do |mac|
-          Slice.find_by!(name: params[:new_slice]).add_mac_address(mac, port)
+  post '/api/create/:name/:con_num' do
+    rest_api do
+      print "create container";
+      name = params[:name]
+      num = params[:com_num]
+      cnt = 0
+      empty_flag = true
+      ip_infs = []
+      new_ip_infs = []
+      File.open('./VM/empty_ip_num.txt','r') do |file|
+        file.each_line do |empty_ip_num|
+          if empty_ip_num.to_i < num.to_i then
+            empty_flag = false
+          end
         end
       end
-      Slice.find_by!(name: params[:b_slice]).each do |port, mac_addresses|#
-        Slice.find_by!(name: params[:new_slice]).add_port(port)
-        mac_addresses.each do |mac|
-          Slice.find_by!(name: params[:new_slice]).add_mac_address(mac, port)
+      if !empty_flag then
+        return "ip_address_full"
+      end
+      File.open('./VM/ip_table.txt','r') do |file|
+        file.each_line do |ip_info|
+          ip_infs.push(ip_info)
         end
       end
-      Slice.destroy params[:a_slice]
-      Slice.destroy params[:b_slice]
-    end
-  end
-#ginnnan add end
-
-  desc 'Adds a port to a slice.'
-  params do
-    requires :slice_id, type: String, desc: 'Slice ID.'
-    requires :dpid, type: Integer, desc: 'Datapath ID.'
-    requires :port_no, type: Integer, desc: 'Port number.'
-  end
-  post 'slices/:slice_id/ports' do
-    rest_api do
-      Slice.find_by!(name: params[:slice_id]).
-        add_port(dpid: params[:dpid], port_no: params[:port_no])
-    end
-  end
-
-  desc 'Deletes a port from a slice.'
-  params do
-    requires :slice_id, type: String, desc: 'Slice ID.'
-    requires :dpid, type: Integer, desc: 'Datapath ID.'
-    requires :port_no, type: Integer, desc: 'Port number.'
-  end
-  delete 'slices/:slice_id/ports' do
-    rest_api do
-      Slice.find_by!(name: params[:slice_id]).
-        delete_port(dpid: params[:dpid], port_no: params[:port_no])
-    end
-  end
-
-  desc 'Lists ports.'
-  params do
-    requires :slice_id, type: String, desc: 'Slice ID.'
-  end
-  get 'slices/:slice_id/ports' do
-    rest_api { Slice.find_by!(name: params[:slice_id]).ports }
-  end
-
-  desc 'Shows a port.'
-  params do
-    requires :slice_id, type: String, desc: 'Slice ID.'
-    requires :port_id, type: String, desc: 'Port ID.'
-  end
-  get 'slices/:slice_id/ports/:port_id' do
-    rest_api do
-      Slice.find_by!(name: params[:slice_id]).
-        find_port(Port.parse(params[:port_id]))
-    end
-  end
-
-
-
-  desc 'Adds a host to a slice.'
-  params do
-    requires :slice_id, type: String, desc: 'Slice ID.'
-    requires :port_id, type: String, desc: 'Port ID.'
-    requires :name, type: String, desc: 'MAC address.'
-  end
-  post '/slices/:slice_id/ports/:port_id/mac_addresses' do
-    rest_api do
-      Slice.find_by!(name: params[:slice_id]).
-        add_mac_address(params[:name], Port.parse(params[:port_id]))
-    end
-  end
-
-  desc 'Deletes a host from a slice.'
-  params do
-    requires :slice_id, type: String, desc: 'Slice ID.'
-    requires :port_id, type: String, desc: 'Port ID.'
-    requires :name, type: String, desc: 'MAC address.'
-  end
-  delete '/slices/:slice_id/ports/:port_id/mac_addresses' do
-    rest_api do
-      Slice.find_by!(name: params[:slice_id]).
-        delete_mac_address(params[:name], Port.parse(params[:port_id]))
-    end
-  end
-
-  desc 'List MAC addresses.'
-  params do
-    requires :slice_id, type: String, desc: 'Slice ID.'
-    requires :port_id, type: String, desc: 'Port ID.'
-  end
-  get 'slices/:slice_id/ports/:port_id/mac_addresses' do
-    rest_api do
-      Slice.find_by!(name: params[:slice_id]).
-        mac_addresses(Port.parse(params[:port_id]))
-    end
-  end
-
-  desc 'Shows a MAC address.'
-  params do
-    requires :slice_id, type: String, desc: 'Slice ID.'
-    requires :port_id, type: String, desc: 'Port ID.'
-    requires :mac_address_id, type: String, desc: 'MAC address.'
-  end
-  get 'slices/:slice_id/ports/:port_id/mac_addresses/:mac_address_id' do
-    rest_api do
-      Slice.find_by!(name: params[:slice_id]).
-        find_mac_address(Port.parse(params[:port_id]), params[:mac_address_id])
+      ip_infs.each do |ip_info|
+        used_flag = ip_info.split(",")[1]
+        ip_address = ip_info.split(",")[0]
+        if used_flag == "f" and cnt < num then
+          cmd = "docker run --name" + name + cnt.to_s + 
+            " --net shared_nw --ip" + ip_address + "-dt iaasamn/sshubuntu:latest"
+          used_flag = "t"
+          cnt = cnt + 1
+        end
+        new_ip_infs.push(ip_address + "," + used_flag)
+      end
+      File.open('./VM/empty_ip_num.txt','w') do |file|
+        file.puts((empty_ip_num.to_i + num.to_i))
+      end
+      File.open('./VM/ip_table.txt','w') do |file|
+        new_ip_infs.each do |ip_info|
+          file.puts(ip_info)
+        end
+      end
     end
   end
 end
