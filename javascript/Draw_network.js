@@ -65,24 +65,32 @@ network.setOptions(options);
     return defer.promise();
   };
 
-  var init = function() {
-    getJsonData(jsonFilePath)
-    .done(function(data) {
-      console.log('取得成功', data);
-      if (!checkObjDiff(pre_data, data)){
-        return;
-      }
-      pre_data = data;
-      afterInit(json = data);
-    })
-    .fail(function(jqXHR, statusText, errorThrown) {
-      console.log('初期化失敗', jqXHR, statusText, errorThrown);
-      // 1秒置いて再取得
-      setTimeout(function() {
-        init();
-      }, 1000);
+  var init = function(){
+    console.log("init");
+    var url = './php/draw_net.php?url=http://localhost:9292/api/status';
+    var xhr = $.ajax({
+	type: 'GET',
+	url: url,
+	dataType: 'text',
+	timeout: 30000
     });
-  };
+    xhr.success(function(data){
+	console.log("success:");
+	if (!checkObjDiff(pre_data, data)){
+	    return ;
+	}
+	pre_data = data;
+	afterInit(json = data);
+    });
+    xhr.error(function(data){
+	console.log("com error");
+	console.log(data);
+	setTimeout(function() {init();}, 1000);
+    });
+    xhr.complete(function(data){
+    });
+  });
+
   setInterval(init,1000);
 }
 
@@ -233,11 +241,6 @@ function onRadioButtonChange() {
 
 $(function(){
   $('#show').on("click", function(){
-    console.log("click");
-    $.post('http://localhost:9292/api/status',"",
-      function(data){
-        console.log(data);
-      }
-    )
+
   });
 });
