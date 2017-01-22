@@ -33,10 +33,16 @@ network.setOptions(options);
   };
 
   var afterInit = function(jsonData) {
-    console.log('afterInit', jsonData);
+    console.log('json parse : afterInit', jsonData);
     var n_data = new Array();
     var l_data = new Array();
     var tmp = new Object();
+    console.log("nodes:");
+    console.log(jsonData[0].nodes);
+    console.log("hosts:");
+    console.log(jsonData[0].hosts);
+    console.log("links:");
+    console.log(jsonData[0].links);
     for(var i in jsonData[0].nodes){
        tmp = { id:+jsonData[0].nodes[i].id, label:jsonData[0].nodes[i].label, image: './html_images/switch.png', shape: 'image'};
        n_data.push( tmp );
@@ -76,6 +82,7 @@ network.setOptions(options);
     });
     xhr.success(function(data){
 	console.log("success:");
+	data = JSON.parse(JSON.parse(data));
 	if (!checkObjDiff(pre_data, data)){
 	    return ;
 	}
@@ -89,7 +96,7 @@ network.setOptions(options);
     });
     xhr.complete(function(data){
     });
-  });
+  };
 
   setInterval(init,1000);
 }
@@ -196,7 +203,7 @@ var click = function() {
 }
 
 var createRadioButton = function() {
-    if (pre_data[0].slices == []) {return}
+    if (pre_data[0].slices == []) {return;}
     var str = '<input id="Radio0" name="RadioGroup1" type="radio" onchange="onRadioButtonChange();" /> <label for="Radio1">all</label><br/>';
     for ( var i = 0; i < pre_data[0].slices.length; i++ ) {
     str = str + '<input id="Radio' + String(i+1) + '" name="RadioGroup1" type="radio" onchange="onRadioButtonChange();" /> <label for="Radio1">' + pre_data[0].slices[i].name + '</label><br/>';
@@ -240,7 +247,6 @@ function onRadioButtonChange() {
 
 
 $(function(){
-  $('#show').on("click", function(){
-
-  });
+  console.log("js start");
+  update_topology();
 });
