@@ -6,3 +6,7 @@ File.open("ip_table.txt","w") do |file|
     file.puts(addr)
   end
 end
+
+File.open("empty_ip_num.txt","w") do |file|
+  file.puts(190)
+end

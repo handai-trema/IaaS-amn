@@ -68,7 +68,7 @@ function create_table_html(con_num,base_name){
 }
 
 function create_container_rest_api(con_name){
-    var url = './php/draw_net.php?url=http://localhost:9292/api/create_container/' + con_name;
+    var url = './php/index.php?url=http://localhost:9292/api/create_container&con_name=' + con_name;
     var xhr = $.ajax({
 	type: 'GET',
 	url: url,
@@ -88,7 +88,7 @@ function create_container_rest_api(con_name){
 }
 
 function show_container_rest_api(){
-    var url = './php/draw_net.php?url=http://localhost:9292/api/show_container';
+    var url = './php/index.php?url=http://localhost:9292/api/show_container';
     var re;
     var xhr = $.ajax({
 	type: 'GET',
