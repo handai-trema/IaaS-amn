@@ -3,7 +3,7 @@ var nodes;
 var edges;
 var network;
 
-$(function(){
+function update_topology(){
   var jsonFilePath = 'tmp/topology.json';
   var EDGE_LENGTH = 150;
   
@@ -18,7 +18,7 @@ $(function(){
 network.setOptions(options);
     click();
     createRadioButton();
-  }
+  };
 
   var checkObjDiff = function(object1, object2) {
     // objectの中身をjson化する
@@ -30,13 +30,19 @@ network.setOptions(options);
     } else {
       return true; // 差分があればtrue
     }
-  }
+  };
 
   var afterInit = function(jsonData) {
-    console.log('afterInit', jsonData);
+    console.log('json parse : afterInit', jsonData);
     var n_data = new Array();
     var l_data = new Array();
     var tmp = new Object();
+    console.log("nodes:");
+    console.log(jsonData[0].nodes);
+    console.log("hosts:");
+    console.log(jsonData[0].hosts);
+    console.log("links:");
+    console.log(jsonData[0].links);
     for(var i in jsonData[0].nodes){
        tmp = { id:+jsonData[0].nodes[i].id, label:jsonData[0].nodes[i].label, image: './html_images/switch.png', shape: 'image'};
        n_data.push( tmp );
@@ -65,26 +71,35 @@ network.setOptions(options);
     return defer.promise();
   };
 
-  var init = function() {
-    getJsonData(jsonFilePath)
-    .done(function(data) {
-      console.log('取得成功', data);
-      if (!checkObjDiff(pre_data, data)){
-        return;
-      }
-      pre_data = data;
-      afterInit(json = data);
-    })
-    .fail(function(jqXHR, statusText, errorThrown) {
-      console.log('初期化失敗', jqXHR, statusText, errorThrown);
-      // 1秒置いて再取得
-      setTimeout(function() {
-        init();
-      }, 1000);
+  var init = function(){
+    console.log("init");
+    var url = './php/draw_net.php?url=http://localhost:9292/api/status';
+    var xhr = $.ajax({
+	type: 'GET',
+	url: url,
+	dataType: 'text',
+	timeout: 30000
+    });
+    xhr.success(function(data){
+	console.log("success:");
+	data = JSON.parse(JSON.parse(data));
+	if (!checkObjDiff(pre_data, data)){
+	    return ;
+	}
+	pre_data = data;
+	afterInit(json = data);
+    });
+    xhr.error(function(data){
+	console.log("com error");
+	console.log(data);
+	setTimeout(function() {init();}, 1000);
+    });
+    xhr.complete(function(data){
     });
   };
+
   setInterval(init,1000);
-});
+}
 
 var click = function() {
   network.on("click", function (params) {
@@ -161,8 +176,7 @@ var click = function() {
   };
 
   var pathConvertedMacToId = function(path, hosts) {
-    //pathのMACをIDに変換して返す
-　　　 var new_path = new Array(path.length);
+    var new_path = new Array(path.length);
     for(var i=0; i<hosts.length; i++){
       if( hosts[i].label == path[0] ){ new_path[0] = hosts[i].id; }
       if( hosts[i].label == path[path.length-1] ){ new_path[path.length-1] = hosts[i].id; }
@@ -186,11 +200,10 @@ var click = function() {
       }
     }
   };
-
-};
+}
 
 var createRadioButton = function() {
-    if (pre_data[0].slices == []) {return}
+    if (pre_data[0].slices == []) {return;}
     var str = '<input id="Radio0" name="RadioGroup1" type="radio" onchange="onRadioButtonChange();" /> <label for="Radio1">all</label><br/>';
     for ( var i = 0; i < pre_data[0].slices.length; i++ ) {
     str = str + '<input id="Radio' + String(i+1) + '" name="RadioGroup1" type="radio" onchange="onRadioButtonChange();" /> <label for="Radio1">' + pre_data[0].slices[i].name + '</label><br/>';
@@ -233,3 +246,7 @@ function onRadioButtonChange() {
 };
 
 
+$(function(){
+  console.log("js start");
+  update_topology();
+});

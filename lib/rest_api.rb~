@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 require 'grape'
 require 'port'
 require 'slice_exceptions'
@@ -159,20 +158,30 @@ class RestApi < Grape::API
   end
   post '/api/status/' do
     rest_api do
-      print "tuikasatakeby works!";
-      str =""
-      File.open('./tmp/topology.json') do |file|
-        # IO#each_lineは1行ずつ文字列として読み込み、それを引数にブロックを実行する
-        # 第1引数: 行の区切り文字列
-        # 第2引数: 最大の読み込みバイト数
-        # 読み込み用にオープンされていない場合にIOError
-        file.each_line do |labmen|
-          # labmenには読み込んだ行が含まれる
-          #  print labmen
-          str += labmen
-        end
-      end
-      return str
+    print "tuikasatakeby works!";
+
+############################################
+
+  str =""
+
+  File.open('./tmp/topology.json') do |file|
+    # IO#each_lineは1行ずつ文字列として読み込み、それを引数にブロックを実行する
+    # 第1引数: 行の区切り文字列
+    # 第2引数: 最大の読み込みバイト数
+    # 読み込み用にオープンされていない場合にIOError
+    file.each_line do |labmen|
+      # labmenには読み込んだ行が含まれる
+    #  print labmen
+      str += labmen
+    end
+end
+
+print "debugtest"
+
+
+###########################################################################
+    #return str
+return 'Content-type: text/html'+ \n + \n + '<html><head></head><body>It works!!!</body></html>'
     end
   end
 
