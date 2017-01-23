@@ -18,6 +18,8 @@ class ArpTable
   def update(port_number, ip_address, mac_address)
     return if @db[ip_address.to_i]
     @db[ip_address.to_i] = ArpEntry.new(port_number, mac_address)
+    puts ip_address
+    puts mac_address
   end
 
   def lookup(ip_address)

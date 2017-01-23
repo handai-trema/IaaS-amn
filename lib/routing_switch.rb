@@ -52,6 +52,7 @@ class RoutingSwitch < Trema::Controller
   delegate :port_modify, to: :@topology
 
   def packet_in(dpid, packet_in)
+    puts "packet_in"
     @topology.packet_in(dpid, packet_in) if packet_in.lldp? ||
       packet_in.ether_type == "0x0806" || (packet_in.ether_type == "0x0800" && packet_in.source_ip_address.to_s != "0.0.0.0")
     @path_manager.packet_in(dpid, packet_in) unless packet_in.lldp?

@@ -1,1 +1,1 @@
-[{"nodes":[{"id":2,"label":"0x2"},{"id":1,"label":"0x1"}],"hosts":[],"links":[{"id":10000,"from":2,"to":1}],"paths":[],"slices":[]}]
+[{"nodes":[{"id":1,"label":"0x1"},{"id":8,"label":"0x8"},{"id":2,"label":"0x2"}],"hosts":[],"links":[{"id":10000,"from":8,"to":2},{"id":10001,"from":2,"to":1}],"paths":[],"slices":[]}]
