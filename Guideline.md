@@ -50,7 +50,9 @@
 - VMマネージャ
 - コンテナ
 
-（図）
+![overview image](https://github.com/handai-trema/IaaS-amn/blob/develop/picture/aaa.png?raw=true)
+
+
 
 ユーザ端末，管理用端末及びVMマネージャはそれぞれスイッチネットワークに接続されており， このスイッチネットワークを介してのみ通信が可能である．
 
