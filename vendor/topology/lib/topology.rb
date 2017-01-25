@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'link'
 
 # Topology information containing the list of known switches, ports,
@@ -84,6 +85,8 @@ class Topology
 
   def maybe_add_host(*host)
     mac_address, ip_address, dpid, port_no = *host
+    puts "add_host: "
+    puts host
     return if @hosts.include?(host) || ip_address == nil
     @hosts << host
     maybe_send_handler :add_host, mac_address, Port.new(dpid, port_no), self

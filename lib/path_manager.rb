@@ -55,10 +55,6 @@ class PathManager < Trema::Controller
   # This method smells of :reek:FeatureEnvy but ignores them
   def maybe_create_shortest_path(packet_in)
 #    logger.info 'add path: '
-    print "source_mac: "
-    puts packet_in.source_mac
-    print "dest_mac: "
-    puts packet_in.destination_mac
     shortest_path =
       @graph.dijkstra(packet_in.source_mac, packet_in.destination_mac)
     return unless shortest_path
