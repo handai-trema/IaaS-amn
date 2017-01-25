@@ -53,12 +53,18 @@ class TopologyController < Trema::Controller
     if packet_in.lldp?
       @topology.maybe_add_link Link.new(dpid, packet_in)
     else
-     # return unless defined?(packet_in.data[:sender_protocol_address]) || defined?(packet_in.data[:source_mac])
-      @topology.maybe_add_host(packet_in.source_mac, 
-                               packet_in.source_ip_address, 
-                               dpid, 
-                               packet_in.in_port) 
-    end 
+      if packet_in.ether_type.to_hex.to_s == "0x806" then
+        @topology.maybe_add_host(packet_in.source_mac, 
+                                 packet_in.sender_protocol_address, 
+                                 dpid, 
+                                 packet_in.in_port)
+      elsif packet_in.ether_type.to_hex.to_s == "0x800" then
+        @topology.maybe_add_host(packet_in.source_mac, 
+                                 packet_in.source_ip_address, 
+                                 dpid, 
+                                 packet_in.in_port)
+      end 
+    end
   end
 
   def flood_lldp_frames

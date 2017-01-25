@@ -44,6 +44,7 @@ class RoutingSwitch < Trema::Controller
     #Arpテーブル
     @arp_table = ArpTable.new
     logger.info 'Routing Switch started.'
+    logger.info 'routing switch'
   end
 
   delegate :switch_ready, to: :@topology
@@ -52,10 +53,16 @@ class RoutingSwitch < Trema::Controller
   delegate :port_modify, to: :@topology
 
   def packet_in(dpid, packet_in)
-    puts "packet_in"
-    @topology.packet_in(dpid, packet_in) if packet_in.lldp? ||
-      packet_in.ether_type == "0x0806" || (packet_in.ether_type == "0x0800" && packet_in.source_ip_address.to_s != "0.0.0.0")
-    @path_manager.packet_in(dpid, packet_in) unless packet_in.lldp?
+    if packet_in.lldp? || packet_in.ether_type.to_hex.to_s == "0x806" || 
+        (packet_in.ether_type.to_hex.to_s == "0x800" && packet_in.source_ip_address.to_s != "0.0.0.0") then
+       @topology.packet_in(dpid, packet_in)
+    end
+    if packet_in.ether_type.to_hex.to_s == "0x800" && packet_in.source_ip_address.to_s != "0.0.0.0" then
+      #if packet_in.source_mac != packet_in.destination_mac then
+      puts @path_manager
+      @path_manager.packet_in(dpid, packet_in)
+      #end
+    end
     #Arp解決
     case packet_in.data
     when Arp::Request
@@ -72,14 +79,12 @@ class RoutingSwitch < Trema::Controller
                       packet_in.sender_protocol_address,
                       packet_in.source_mac)
     #宛先ホストのmacアドレスをarpテーブルから探す
-    if @arp_table.lookup(packet_in.sender_protocol_address)
-      dest_host_mac_address = @arp_table.lookup(packet_in.sender_protocol_address).mac_address
-      print "dest_mac: #{dest_host_mac_address}\n"
-      print "source_mac: #{packet_in.source_mac}\n"
+    if @arp_table.lookup(packet_in.target_protocol_address)
+      dest_host_mac_address = @arp_table.lookup(packet_in.target_protocol_address).mac_address
       send_packet_out(
                       dpid,
-                      raw_data: Arp::Reply.new(destination_mac: dest_host_mac_address,
-                                               source_mac: packet_in.source_mac,
+                      raw_data: Arp::Reply.new(destination_mac: packet_in.source_mac,
+                                               source_mac: dest_host_mac_address,
                                                sender_protocol_address: packet_in.target_protocol_address,
                                                target_protocol_address: packet_in.sender_protocol_address
                                                ).to_binary,
@@ -88,7 +93,6 @@ class RoutingSwitch < Trema::Controller
   end
 
   def packet_in_arp_reply(dpid, packet_in)
-    puts "arp_reply"
     @arp_table.update(packet_in.in_port,
                       packet_in.sender_protocol_address,
                       packet_in.source_mac)
