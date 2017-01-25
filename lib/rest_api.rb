@@ -43,61 +43,6 @@ class RestApi < Grape::API
     end
   end
 
-  desc 'Create Containers(renban).'
-  params do
-    requires :name, type: String, desc: 'Container_ name.'
-    requires :con_num, type: Integer, desc: 'Container_num.'
-  end
-  post '/api/create_containers/:name/:con_num' do
-    rest_api do
-      print "create container";
-      name = params[:name]
-      num = params[:com_num]
-      cnt = 0
-      empty_flag = true
-      empty_ip_num_now = 0
-      ip_infs = []
-      new_ip_infs = []
-      File.open('./VM/empty_ip_num.txt','r') do |file|
-        file.each_line do |empty_ip_num|
-          if empty_ip_num.to_i < num.to_i then
-            empty_flag = false
-          end
-          empty_ip_num_now = empty_ip_num
-        end
-      end
-      if !empty_flag then
-        return "ip_address_full"
-      end
-      File.open('./VM/ip_table.txt','r') do |file|
-        file.each_line do |ip_info|
-          ip_infs.push(ip_info)
-        end
-      end
-      ip_infs.each do |ip_info|
-        used_flag = ip_info.split(",")[1]
-        ip_address = ip_info.split(",")[0]
-        if used_flag == "f" and cnt < num then
-          cmd = "docker run --name" + name + cnt.to_s + 
-            " --net shared_nw --ip" + ip_address + "-dt iaasamn/sshubuntu:latest"
-          used_flag = "t"
-          cnt = cnt + 1
-          puts "command:"
-          puts cmd
-        end
-        new_ip_infs.push(ip_address + "," + used_flag)
-      end
-      File.open('./VM/empty_ip_num.txt','w') do |file|
-        file.puts((empty_ip_num_now.to_i - num.to_i))
-      end
-      File.open('./VM/ip_table.txt','w') do |file|
-        new_ip_infs.each do |ip_info|
-          file.puts(ip_info)
-        end
-      end
-    end
-  end
-
   desc 'Create Container.'
   params do
     requires :name, type: String, desc: 'Container_ name.'
@@ -136,12 +81,15 @@ class RestApi < Grape::API
         ip_address = ip_info.split(",")[0]
         if used_flag == "f" and !create_flag then
           cmd = "docker run --name " + name + 
-            " --net shared_nw --ip " + ip_address + "-dt iaasamn/sshubuntu:latest"
+            " --net shared_nw --ip " + ip_address + " -dt iaasamn/sshubuntu:latest"
           used_flag = "t"
           create_flag = true
           new_ip_infs.push(ip_address + "," + used_flag + "," + name + "," + user_name)
           puts "command:"
           puts cmd
+          `#{cmd}`
+          cmd = "docker exec -it "+name+" ping -c 1 192.168.1.251"
+          `#{cmd}`
         else
           new_ip_infs.push(ip_info)
         end
