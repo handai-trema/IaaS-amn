@@ -4,6 +4,8 @@ require 'port'
 require 'slice_exceptions'
 require 'slice_extensions'
 require 'trema'
+require 'net/http'
+require 'uri'
 
 module DRb
   # delegates to_json to remote object
@@ -80,6 +82,19 @@ class RestApi < Grape::API
         used_flag = ip_info.split(",")[1]
         ip_address = ip_info.split(",")[0]
         if used_flag == "f" and !create_flag then
+          #create new slice
+          user_num = user_name.split(".")[3].chomp
+          URL = 'http://192.168.1.2/api/create_slice'
+          uri = URI.parse(URL)
+          http = Net::HTTP.new(uri.host, uri.port)
+          req = Net::HTTP::Post.new(uri.request_uri)
+          req["Content-Type"] = "application/json"
+          payload = {
+            "name" => user_num
+          }.to_json
+          req.body = payload
+          res = http.request(req)
+          #docker run
           cmd = "docker run --name " + name + 
             " --net shared_nw --ip " + ip_address + " -dt iaasamn/sshubuntu:latest"
           used_flag = "t"
@@ -88,6 +103,20 @@ class RestApi < Grape::API
           puts "command:"
           puts cmd
           `#{cmd}`
+          #add host to slice
+          URL = 'http://192.168.1.2/api/add_host_to_slice'
+          uri = URI.parse(URL)
+          http = Net::HTTP.new(uri.host, uri.port)
+          req = Net::HTTP::Post.new(uri.request_uri)
+          req["Content-Type"] = "application/json"
+          payload = {
+            "slice_id" => user_num
+            "port_id" => #port
+            "name" => #mac_addr
+          }.to_json
+          req.body = payload
+          res = http.request(req)
+          #docker exec ping
           cmd = "docker exec -it "+name+" ping -c 1 192.168.1.251"
           `#{cmd}`
         else
