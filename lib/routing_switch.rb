@@ -43,6 +43,8 @@ class RoutingSwitch < Trema::Controller
     @path_manager.add_observer @topology
     #Arpテーブル
     @arp_table = ArpTable.new
+    Slice.create("slice1")
+    Slice.create("slice2")
     logger.info 'Routing Switch started.'
     logger.info 'routing switch'
   end
@@ -67,6 +69,7 @@ class RoutingSwitch < Trema::Controller
     case packet_in.data
     when Arp::Request
       packet_in_arp_request dpid, packet_in.in_port, packet_in.data
+      packet_in_add_host_to_slice dpid, packet_in.in_port, packet_in.data
     when Arp::Reply
       packet_in_arp_reply dpid, packet_in
     end
@@ -96,6 +99,31 @@ class RoutingSwitch < Trema::Controller
     @arp_table.update(packet_in.in_port,
                       packet_in.sender_protocol_address,
                       packet_in.source_mac)
+  end
+
+  #スライスへのホストの追加
+  def packet_in_add_host_to_slice(dpid, in_port, packet_in)
+    puts "slice_add_to_host: "
+    print "ip: "
+    puts packet_in.sender_protocol_address
+    print "in_port: "
+    puts in_port
+    user_addr_end = packet_in.sender_protocol_address.split(".|\n")[3].chomp.to_i
+    #コントローラ - 管理端末とVMManagerのスライス
+    if user_addr_end == 251 then
+      Slice.find_by!(name: "slice1").
+        add_mac_address(packet_in.source_mac, Port.parse(in_port))
+      Slice.find_by!(name: "slice2").
+        add_mac_address(packet_in.source_mac, Port.parse(in_port))
+    #コントローラ端末内WEBサーバ - 管理端末のスライス
+    elsif user_addr_end >= 4 && user_addr_end <= 9 then
+      Slice.find_by!(name: "slice1").
+        add_mac_address(packet_in.source_mac, Port.parse(in_port))
+    #コントローラ端末内RESTAPIサーバ - VMManagerのスライス
+    elsif user_addr_end == 2 then
+      Slice.find_by!(name: "slice2").
+        add_mac_address(packet_in.source_mac, Port.parse(in_port))
+    end
   end
 
   private
