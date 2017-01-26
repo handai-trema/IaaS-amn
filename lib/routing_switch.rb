@@ -43,6 +43,9 @@ class RoutingSwitch < Trema::Controller
     @path_manager.add_observer @topology
     #Arpテーブル
     @arp_table = ArpTable.new
+    #VMMangerの情報
+    @VM_mac = ""
+    @VM_port = ""
     Slice.create("slice1")
     Slice.create("slice2")
     logger.info 'Routing Switch started.'
@@ -65,6 +68,9 @@ class RoutingSwitch < Trema::Controller
       @path_manager.packet_in(dpid, packet_in)
       #end
     end
+    #if (packet_in.ether_type.to_hex.to_s == "0x800" && packet_in.source_ip_address.to_s != "0.0.0.0") then
+    #  packet_in_add_host_to_slice dpid, packet_in.in_port, packet_in.data
+    #end
     #Arp解決
     case packet_in.data
     when Arp::Request
@@ -103,27 +109,49 @@ class RoutingSwitch < Trema::Controller
 
   #スライスへのホストの追加
   def packet_in_add_host_to_slice(dpid, in_port, packet_in)
+    user_addr_end = packet_in.source_ip_address.to_s.split(".")[3].to_i
     puts "slice_add_to_host: "
-    print "ip: "
-    puts packet_in.sender_protocol_address
-    print "in_port: "
-    puts in_port
-    user_addr_end = packet_in.sender_protocol_address.split(".|\n")[3].chomp.to_i
+    print "ip: " 
+    puts user_addr_end
+    print "port: "
+    puts dpid.to_hex.to_s + ":" + in_port.to_s
     #コントローラ - 管理端末とVMManagerのスライス
     if user_addr_end == 251 then
+      puts "add_251_slice1 2:"
       Slice.find_by!(name: "slice1").
-        add_mac_address(packet_in.source_mac, Port.parse(in_port))
+        add_mac_address(packet_in.source_mac, Port.parse(dpid.to_hex.to_s + ":" + in_port.to_s))
       Slice.find_by!(name: "slice2").
-        add_mac_address(packet_in.source_mac, Port.parse(in_port))
+        add_mac_address(packet_in.source_mac, Port.parse(dpid.to_hex.to_s + ":" + in_port.to_s))
     #コントローラ端末内WEBサーバ - 管理端末のスライス
     elsif user_addr_end >= 4 && user_addr_end <= 9 then
+      puts "add_4_slice1:"
       Slice.find_by!(name: "slice1").
-        add_mac_address(packet_in.source_mac, Port.parse(in_port))
+        add_mac_address(packet_in.source_mac, Port.parse(dpid.to_hex.to_s + ":" + in_port.to_s))
     #コントローラ端末内RESTAPIサーバ - VMManagerのスライス
     elsif user_addr_end == 2 then
+      puts "add_2_slice2:"
       Slice.find_by!(name: "slice2").
-        add_mac_address(packet_in.source_mac, Port.parse(in_port))
+        add_mac_address(packet_in.source_mac, Port.parse(dpid.to_hex.to_s + ":" + in_port.to_s))
+      @VM_mac = packet_in.source_mac
+      @VM_port = dpid.to_hex.to_s + ":" + in_port.to_s
+    #ユーザ端末 - VMManagerのスライス
+    elsif user_addr_end >= 200 && user_addr_end <= 231 then
+      puts "add_user_slice" + user_addr_end.to_s
+      slice_name = "slice" + user_addr_end.to_s
+      Slice.create(slice_name)
+      Slice.find_by!(name: slice_name).
+        add_mac_address(packet_in.source_mac, Port.parse(dpid.to_hex.to_s + ":" + in_port.to_s))
+      Slice.find_by!(name: slice_name).
+        add_mac_address(@VM_mac, Port.parse(@VM_port))
+     #ユーザ端末 - コンテナ - VMManagerのスライス
+    elsif user_addr_end >= 10 && user_addr_end <= 199 then
+      puts "add_user_slice" + user_addr_end.to_s
+      slice_name = "slice" + ??
+      Slice.find_by!(name: slice_name).
+        add_mac_address(packet_in.source_mac, Port.parse(dpid.to_hex.to_s + ":" + in_port.to_s))
     end
+
+    update_slice
   end
 
   private
