@@ -1,6 +1,5 @@
 <?php
 $urls = array('http://192.168.1.2:9292/api/','http://192.168.1.3:9292/api/');
-$cont_url = 'http://'
 #コンテナを作成
 if (isset($_GET['con_name'])) {
   $ip_addr_infs = file('../VM/ip_table.txt',FILE_IGNORE_NEW_LINES);
@@ -37,10 +36,10 @@ else if (isset($_GET['show'])) {
   $ip_addr_infs = file('../VM/ip_table.txt',FILE_IGNORE_NEW_LINES);
   $user_container_infs = array();
   foreach($ip_addr_infs as $ip_addr_inf){
-    $user_name = split(",",$ip_addr_inf)[3]
+    $user_name = split(",",$ip_addr_inf)[3];
     if ($user_name == $_SERVER["REMOTE_ADDR"]) {
       array_push($user_container_infs, $ip_addr_inf);
     }
   }
-  echo $user_container_infs
+  echo $user_container_infs;
 }
