@@ -146,7 +146,7 @@ class RoutingSwitch < Trema::Controller
      #ユーザ端末 - コンテナ - VMManagerのスライス
     elsif user_addr_end >= 10 && user_addr_end <= 199 then
       puts "add_user_slice" + user_addr_end.to_s
-      slice_name = "slice" + ??
+      slice_name = "slice" + packet_in.target_ip_address.to_s.split(".")[3]
       Slice.find_by!(name: slice_name).
         add_mac_address(packet_in.source_mac, Port.parse(dpid.to_hex.to_s + ":" + in_port.to_s))
     end
