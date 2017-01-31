@@ -1,8 +1,8 @@
 <?php
-$urls = array('http://192.168.1.2:9292/api/','http://192.168.1.3:9292/api/');
+$urls = array('http://192.168.1.2:9292/api/','http://192.168.1.2:9292/api/');
 #コンテナを作成
 if (isset($_GET['con_name'])) {
-  $ip_addr_infs = file('../VM/ip_table.txt',FILE_IGNORE_NEW_LINES);
+  $ip_addr_infs = file('../VM/ip_table.txt');
   foreach ($ip_addr_infs as $idx => $ip_addr_inf) {
     $used_flag = split(",",$ip_addr_inf)[1];
     #コンテナの作成
@@ -24,12 +24,11 @@ if (isset($_GET['con_name'])) {
       #REST_APIを叩いてコンテナを作成
       file_get_contents($url, false, stream_context_create($options));
       #上書き
-      $ip_addr_infs[$idx] = $ip_addr.',t,'.$_GET['con_name'].','.$_SERVER["REMOTE_ADDR"];
+      $ip_addr_infs[$idx] = $ip_addr.',t,'.$_GET['con_name'].','.$_SERVER["REMOTE_ADDR"]."\n";
       break;
     }
   }
   file_put_contents('../VM/ip_table.txt',$ip_addr_infs);
-  echo "create_end";
 }
 #コンテナの情報を表示
 else if (isset($_GET['show'])) {
