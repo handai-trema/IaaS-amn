@@ -48,115 +48,26 @@ class RestApi < Grape::API
   desc 'Create Container.'
   params do
     requires :name, type: String, desc: 'Container_ name.'
-    requires :user_name, type: String, desc: 'user_name.'
+    requiers :ip_addr, type: String, desc: 'container_ip_addr.'
+    requires :user_ip_addr, type: String, desc: 'user_ip_addr.'
   end
   post '/api/create_container' do
     rest_api do
       puts "create container"
       name = params[:name]
-      user_name = params[:user_name]
+      container_ip_addr = params[:ip_addr]
+      user_ip_addr = params[:user_ip_addr]
       puts name
-      puts user_name
-      empty_flag = true
-      empty_ip_num_now = 0
-      ip_infs = []
-      new_ip_infs = []
-      File.open('./VM/empty_ip_num.txt','r') do |file|
-        file.each_line do |empty_ip_num|
-          if empty_ip_num.to_i < 1 then
-            empty_flag = false
-          end
-          empty_ip_num_now = empty_ip_num
-        end
-      end
-      if !empty_flag then
-        return "ip_address_full"
-      end
-      File.open('./VM/ip_table.txt','r') do |file|
-        file.each_line do |ip_info|
-          ip_infs.push(ip_info)
-        end
-      end
-      create_flag = false
-      ip_infs.each do |ip_info|
-        used_flag = ip_info.split(",")[1]
-        ip_address = ip_info.split(",")[0]
-        if used_flag == "f" and !create_flag then
-          #create new slice
-          user_num = user_name.split(".")[3].chomp
-          URL = 'http://192.168.1.2/api/create_slice'
-          uri = URI.parse(URL)
-          http = Net::HTTP.new(uri.host, uri.port)
-          req = Net::HTTP::Post.new(uri.request_uri)
-          req["Content-Type"] = "application/json"
-          payload = {
-            "name" => user_num
-          }.to_json
-          req.body = payload
-          res = http.request(req)
-          #docker run
-          cmd = "docker run --name " + name + 
-            " --net shared_nw --ip " + ip_address + " -dt iaasamn/sshubuntu:latest"
-          used_flag = "t"
-          create_flag = true
-          new_ip_infs.push(ip_address + "," + used_flag + "," + name + "," + user_name)
-          puts "command:"
-          puts cmd
-          `#{cmd}`
-          #add host to slice
-          URL = 'http://192.168.1.2/api/add_host_to_slice'
-          uri = URI.parse(URL)
-          http = Net::HTTP.new(uri.host, uri.port)
-          req = Net::HTTP::Post.new(uri.request_uri)
-          req["Content-Type"] = "application/json"
-          payload = {
-            "slice_id" => user_num
-            "port_id" => #port
-            "name" => #mac_addr
-          }.to_json
-          req.body = payload
-          res = http.request(req)
-          #docker exec ping
-          cmd = "docker exec -it "+name+" ping -c 1 192.168.1.251"
-          `#{cmd}`
-        else
-          new_ip_infs.push(ip_info)
-        end
-      end
-      File.open('./VM/empty_ip_num.txt','w') do |file|
-        file.puts((empty_ip_num_now.to_i - 1))
-      end
-      File.open('./VM/ip_table.txt','w') do |file|
-        new_ip_infs.each do |ip_info|
-          file.puts(ip_info)
-        end
-      end
-    end
-  end
-
-  desc 'Show Container.'
-  params do
-    requires :user_name, type: String, desc: 'user_name.'
-  end
-  post '/api/show_container' do
-    rest_api do
-      puts "show container";
-      user_name = params[:user_name]
-      container_infs = []
-      File.open('./VM/ip_table.txt','r') do |file|
-        file.each_line do |container_info|
-          container_ip = container_info.split(",")[0]
-          used_flag = container_info.split(",")[1]
-          if used_flag == "t" then
-            container_name = container_info.split(",")[2]
-            container_user_name = container_info.split(",")[3].chomp
-            if container_user_name == user_name then
-              container_infs.push(container_info)
-            end
-          end
-        end
-      end
-      return container_infs;
+      puts container_ip_addr
+      #docker run
+      cmd = "docker run --name " + name + 
+        " --net shared_nw --ip " + container_ip_addr + " -dt iaasamn/sshubuntu:latest"
+      puts "command:"
+      puts cmd
+      `#{cmd}`
+      #docker exec ping コンテナ作成元のユーザ端末にpingを送る
+      cmd = "docker exec -it "+ name + " ping -c 1 " + user_ip_addr
+      `#{cmd}`
     end
   end
 end
