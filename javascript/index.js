@@ -17,6 +17,12 @@ $(function(){
 	$('#con_name_table_field').html(table_html);
     };
 
+    add_con_name_ip = function(con_name_ip){
+	var con_ip_html = create_con_ip_table_html(con_name_ip);
+	console.log($('#con_name_ip_table'));
+	$('#con_name_ip_table').html(con_ip_html);
+    };
+
     $('#con_name_input').on('click', function(){
 	var con_num = parseInt($('#con_num').val());
 	add_table_name_empty(con_num);
@@ -36,9 +42,13 @@ $(function(){
 	    var con_name = $(input_id).val();
 	    create_container_rest_api(con_name);
 	}
-	show_container_rest_api();
+	add_con_name_ip(show_container_rest_api());
     });
 });
+
+function create_con_ip_table_html(con_ip_table){
+    return "<span>" + con_ip_table + " </span>";
+}
 
 function create_table_html_name_empty(con_num){
     var re = "<h2> コンテナの名前テーブル </h2>";

@@ -37,9 +37,13 @@ else if (isset($_GET['show'])) {
   $user_container_infs = array();
   foreach($ip_addr_infs as $ip_addr_inf){
     $user_name = split(",",$ip_addr_inf)[3];
+    echo "user_name:".$user_name."\n";
+    echo "server:".$_SERVER["REMOTE_ADDR"]."\n";
+    echo ($user_name == $_SERVER["REMOTE_ADDR"]);
+    echo "\n";
     if ($user_name == $_SERVER["REMOTE_ADDR"]) {
       array_push($user_container_infs, $ip_addr_inf);
     }
   }
-  echo $user_container_infs;
+  echo implode("\n ",$user_container_infs);
 }
