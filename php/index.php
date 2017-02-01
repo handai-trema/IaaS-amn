@@ -1,5 +1,5 @@
 <?php
-$urls = array('http://192.168.1.2:9292/api/','http://192.168.1.2:9292/api/');
+$urls = array('http://192.168.1.4:9292/api/','http://192.168.1.4:9292/api/');
 #コンテナを作成
 if (isset($_GET['con_name'])) {
   $ip_addr_infs = file('../VM/ip_table.txt');
@@ -9,7 +9,7 @@ if (isset($_GET['con_name'])) {
     if ($used_flag == "f"){
       #コンテナのip
       $ip_addr = split(",",$ip_addr_inf)[0];
-      $url = $urls[rand(0,1)].create_container;
+      $url = $urls[rand(0,1)].'create_container';
       $data = array(
           'name' => $_GET['con_name'],
           'ip_addr' => $ip_addr,
@@ -25,6 +25,7 @@ if (isset($_GET['con_name'])) {
       file_get_contents($url, false, stream_context_create($options));
       #上書き
       $ip_addr_infs[$idx] = $ip_addr.',t,'.$_GET['con_name'].','.$_SERVER["REMOTE_ADDR"]."\n";
+      echo $ip_addr_infs[$idx];
       break;
     }
   }
