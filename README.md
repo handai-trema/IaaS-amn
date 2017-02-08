@@ -1,95 +1,144 @@
-Routing Switch
-==============
-[![Build Status](http://img.shields.io/travis/trema/routing_switch/develop.svg?style=flat)][travis]
-[![Code Climate](http://img.shields.io/codeclimate/github/trema/routing_switch.svg?style=flat)][codeclimate]
-[![Coverage Status](http://img.shields.io/codeclimate/coverage/github/trema/routing_switch.svg?style=flat)][codeclimate]
-[![Dependency Status](http://img.shields.io/gemnasium/trema/routing_switch.svg?style=flat)][gemnasium]
+# IaaS-amn
 
-This is a layer 2 switch application with virtual slicing
-function. The slicing function allows us to create multiple layer 2
-domains. This is similar to MAC-based VLAN but there is no limitation
-on VLAN ID space.
+## 各マシンの設定方法
+各マシンに割り振るIPアドレスはIPリストから該当するものを選択して利用する．
 
-[travis]: http://travis-ci.org/trema/routing_switch
-[codeclimate]: https://codeclimate.com/github/trema/routing_switch
-[gemnasium]: https://gemnasium.com/trema/routing_switch
+ただし，VirtualBoxなどの仮想化ソフトウェアを利用し，
+VMをマシンとして利用する場合には，
+ホストマシンのイーサネットケーブルに割り振るIPアドレスをIPリストのOtherから選択し，
+さらに各VMのアダプタの設定についてはブリッジアダプタを選択しなければならない．
 
+また，本説明では仮想化ソフトウェアとしてVirtualBoxを用いて説明する．
 
-Prerequisites
--------------
+### ユーザ用端末，管理用端末
+ブラウザとpingをインストールし，IPをそれぞれ固定で割り振る．
 
-* Ruby 2.0.0 or higher ([RVM][rvm]).
-* [Open vSwitch][openvswitch] (`apt-get install openvswitch-switch`).
+### コントローラ
+コントローラはスイッチネットワーク（スイッチのポート）と接続するインターフェース（以下 if-S）と，スイッチのマネージメントポートに接続するインターフェース（以下 if-M）が必要である．
+これらのインターフェースには異なるIPアドレスを設定しておく．
 
-[rvm]: https://rvm.io/
-[openvswitch]: https://openvswitch.org/
+また，スイッチの設定時にコントローラのIPアドレスを指定する場合には，
+if-Mに設定したIPアドレスを指定する．
 
+また，本演習で用いた実スイッチのIPアドレスは192.168.1.1/24に設定する．
 
-Install
--------
-
-```bash
-git clone https://github.com/trema/routing_switch.git
-cd routing_switch
+事前にruby2.2.5, bundler, gitをインストールし，以下のコマンドを実行して必要なプログラム及びパッケージをインストールしておく．
+```
+cd ~
+git clone -b dev-nishimura https://github.com/handai-trema/IaaS-amn
+cd IaaS-amn/
 bundle install --binstubs
 ```
 
+1. スイッチ及びスイッチのマネージメントポートに接続し，インターフェースにIPアドレスを設定する
 
-Play
-----
+2. 以下のコマンドを実行する
+```
+sudo route add -host 192.168.1.1 <if-M>
+```
+ただし，<if-M>はif-Mのインターフェース名を表す．
 
-To run without virtual slicing, run `lib/routing_switch.rb` as
-follows:
-
-```bash
-./bin/trema run lib/routing_switch.rb -c trema.conf
+3. Webサーバを起動する
+```
+cd ~/IaaS-amn/
+bin/rackup -o 0.0.0.0 &
 ```
 
-To run with virtual slicing support, run `lib/routing_switch.rb` with
-`-- --slicing` options as follows:
-
-```bash
-./bin/trema run lib/routing_switch.rb -c trema.conf -- --slicing
+4. コントローラを起動する
+```
+cd ~/IaaS-amn/
+bin/trema run ./lib/routing_switch.rb
 ```
 
-In another terminal, you can create virtual slices with the following
-command:
+5. 終了するときは，Ctrl + Cでコントローラプログラムを終了し，killコマンドなどでWebサーバを終了する．
 
-```bash
-./bin/slice add foo
+### VMマネージャ
+事前にruby2.2.5, bundler, gitをインストールしておく．  
+また，以下のコマンドを実行して，必要なプログラム及びパッケージをインストールしておく．
+```
+cd ~
+git clone -b VMRESTAPI https://github.com/handai-trema/IaaS-amn
+cd IaaS-amn/
+bundle install --binstubs
+```
+1. スイッチに接続し，インターフェースにIPアドレスを設定する
+
+2. IaaS-amn/ディレクトリ上で，以下のコマンドを実行し，Webサーバを起動する
+```
+./bin/rackup -o 0.0.0.0
 ```
 
-Then add hosts to the slice with the following command:
+### VMサーバ
+以下からVMの仮想イメージをダウンロードし，利用する．
 
-```bash
-./bin/slice add_host --mac 11:11:11:11:11:11 --port 0x1:1 --slice foo
+ダウンロードURL  
+[ vmmanager.ova ](https://ecsosaka-my.sharepoint.com/personal/u141594c_ecs_osaka-u_ac_jp/_layouts/15/guestaccess.aspx?docid=05b93cfed22144d0fb1715bd45ddf518f&authkey=AWI5hSepDEk9yE5A7zCg48I)
+
+1. 仮想イメージをインポートし，仮想マシンを作成する
+
+2. 仮想マシンのネットワーク設定からアダプタ1，2のネットワーク設定をブリッジアダプタにする．ホストマシンのアダプタにはスイッチネットワークと接続されているアダプタを選択する．  
+アダプタ2は高度な設定を開いて，プロミスキャスモードを「すべて許可」にしておく．
+
+3. 仮想マシンを起動し，ログインする
+```
+login: vmmanager  
+password: password
 ```
 
+4. ifconfig でeth0, eth1, docker0, docker1ができていることを確認する．  
+また，各インターフェースのIPアドレスがeth0: 192.168.1.4, eth1: 192.168.1.5, docker1: 192.168.1.5となっていることを確認する
 
-REST API
---------
-
-To start the REST API server:
-
-```bash
-./bin/rackup
+5. 以下のようにしてeth1のIPアドレスを消去する
+```
+sudo ip addr del 192.168.1.5/24 dev eth1
 ```
 
-### Supported APIs
+6. 以下のコマンドによってコンテナと外部ネットワークをつなぐブリッジと仮想マシンのインターフェースを接続する
+```
+sudo brctl addif docker1 eth1
+```
 
-Read [this](https://relishapp.com/trema/routing-switch/docs/rest-api) for details.
+7. 以下のコマンドによってREST APIによる命令を処理するためのWebサーバを起動する
+```
+cd ~/iaas-amn
+./bin/rackup -o 0.0.0.0
+```
 
-Description                 | Method | URI
-----------------------------|--------|--------------------------------------------------------------
-Create a slice              | POST   | `/slices`
-Delete a slice              | DELETE | `/slices`
-List slices                 | GET    | `/slices`
-Shows a slice               | GET    | `/slices/:slice_id`
-Add a port to a slice       | POST   | `/slices/:slice_id/ports`
-Delete a port from a slice  | DELETE | `/slices/:slice_id/ports`
-List ports                  | GET    | `/slices/:slice_id/ports`
-Shows a port                | GET    | `/slices/:slice_id/ports/:port_id`
-Adds a host to a slice      | POST   | `/slices/:slice_id/ports/:port_id/mac_addresses`
-Deletes a host from a slice | DELETE | `/slices/:slice_id/ports/:port_id/mac_addresses`
-List MAC addresses          | GET    | `/slices/:slice_id/ports/:port_id/mac_addresses`
-Shows a MAC address         | GET    | `/slices/:slice_id/ports/:port_id/mac_addresses/:mac_address`
+### コンテナ
+コンテナの持つIP向けに同じネットワークからSSHすると，コンテナを利用できる．
+
+ユーザ名及びパスワードは以下である．
+
+ID: root  
+Pass: root
+
+ID: admin  
+Pass: password
+
+ID: enduser  
+Pass: password
+
+## 利用手順
+1. スイッチを起動する
+2. コントローラをスイッチに接続し，起動する
+3. 管理用端末をスイッチに接続し，起動する
+4. 管理用端末からコントローラの<if-S>にpingコマンドを実行し，通信できることを確認する
+5. 管理用端末のブラウザから<if-S>にアクセスし，トポロジ情報にアクセスできることを確認する
+6. VMマネージャを起動し，<if-S>にpingコマンドを実行し，通信できることを確認する
+7. VMサーバを起動し，<if-S>にpingコマンドを実行し，通信できることを確認する
+8. ユーザ端末を起動し，VMマネージャにpingコマンドを実行し，通信できることを確認する
+9. ユーザ端末のブラウザからVMマネージャのIPアドレスを利用してWebインターフェースにアクセスし，コンテナ要求を行う
+10. ユーザ端末からコンテナのIPアドレスにSSHコマンドを実行し，コンテナの操作を行う
+
+## IPリスト
+
+| 機器         |                    IP アドレス (ネットマスク長24)|
+|:-------------|-------------------------------:|
+| スイッチ     |                    192.168.1.1 |
+| VMサーバ |     192.168.1.2 〜 192.168.1.5 |
+| VMマネージャ |      192.168.1.6 |
+| 管理用端末   |     192.168.1.7 〜 192.168.1.9 |
+| コンテナ           |  192.168.1.10 〜 192.168.1.199 |
+| ユーザ端末   | 192.168.1.200 〜 192.168.1.232 |
+| other        | 192.168.1.233 〜 192.168.1.247 |
+| コントローラ |       192.168.1.251 〜 192.168.1.254 |
