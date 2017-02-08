@@ -34,6 +34,10 @@ class Graph
 
   def dijkstra(source_mac, destination_mac)
     return if @graph[destination_mac].empty?
+    print "dij source_mac: "
+    puts source_mac
+    print "dij dest_mac: "
+    puts destination_mac
     route = Dijkstra.new(@graph).run(source_mac, destination_mac)
     route.reject { |each| each.is_a? Integer }
   end

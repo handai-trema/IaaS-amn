@@ -20,7 +20,11 @@ module View
       end
       i = 0
       hosts = topology.hosts.each_with_object({}) do |each, tmp|
-        tmp[i] = { "id"=> 100+i, "label"=> each[1].to_s }
+        ip_addr = each[1].to_s.split(".")[3].to_i
+        if (ip_addr >= 248 && ip_addr <= 250) || ip_addr == 252 || ip_addr == 253 || ip_addr == 3 || ip_addr == 5 then
+          next
+        end
+        tmp[i] = { "id"=> 100+i, "label"=> ("ip: " + each[1].to_s + " mac: " + each[0].to_s)}
         i += 1
       end
       i = 0

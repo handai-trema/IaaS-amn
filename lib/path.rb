@@ -56,6 +56,22 @@ class Path < Trema::Controller
   def out_port
     path.last
   end
+  
+  def source_mac
+    @full_path[0]
+  end
+
+  def destination_mac
+    @full_path[-1]
+  end
+
+  def get_packet_in
+    @packet_in
+  end
+
+  def get_path
+    @full_path
+  end
 
   private
 
@@ -64,10 +80,18 @@ class Path < Trema::Controller
   end
 
   def flow_mod_add_to_each_switch
-    path.each_slice(2) do |in_port, out_port|
-      send_flow_mod_add(out_port.dpid,
-                        match: exact_match(in_port.number),
-                        actions: SendOutPort.new(out_port.number))
+    if path.length == 1 then
+      path.each_slice(2) do |in_port, out_port|
+        send_flow_mod_add(in_port.dpid,
+                          match: exact_match(in_port.number),
+                          actions: SendOutPort.new(in_port.number))
+      end
+    else
+      path.each_slice(2) do |in_port, out_port|
+        send_flow_mod_add(out_port.dpid,
+                          match: exact_match(in_port.number),
+                          actions: SendOutPort.new(out_port.number))
+      end
     end
   end
 
@@ -81,10 +105,17 @@ class Path < Trema::Controller
 
   def exact_match(in_port)
     #ExactMatch.new(@packet_in).tap { |match| match.in_port = in_port }
-    Match.new({
-                destination_ip_address: @packet_in.destination_ip_address,
-                ether_type: 0x0800
-              })
+    if @packet_in.ether_type.to_hex.to_s == "0x806" then
+      Match.new({
+                  destination_ip_address: @packet_in.target_protocol_address,
+                  ether_type: 0x0800
+                })
+    else
+      Match.new({
+                  destination_ip_address: @packet_in.destination_ip_address,
+                  ether_type: 0x0800
+                })
+    end
   end
 
   def path

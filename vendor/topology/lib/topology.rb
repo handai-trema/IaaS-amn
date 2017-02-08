@@ -95,10 +95,30 @@ class Topology
   end
 
   def maybe_add_path(shortest_path)
+    if shortest_path.kind_of?(Array) && shortest_path.empty? then
+      return ;
+    end
+    puts "shortest_path: "
+    puts shortest_path.length
+    p shortest_path
     temp = Array.new
     temp << shortest_path[0].to_s
-    shortest_path[1..-2].each_slice(2) do |in_port, out_port|
-      temp << out_port.dpid
+    if shortest_path.length == 3 then
+      shortest_path[1..-2].each_slice(2) do |in_port, out_port|
+        puts "in: "
+        p in_port
+        puts "out: "
+        p out_port
+        temp << in_port.dpid
+      end
+    else
+      shortest_path[1..-2].each_slice(2) do |in_port, out_port|
+        puts "in: "
+        p in_port
+        puts "out: "
+        p out_port
+        temp << out_port.dpid
+      end
     end
     temp << shortest_path.last.to_s
     unless @paths.include?(temp)
@@ -108,7 +128,11 @@ class Topology
   end
 
   def maybe_delete_path(delete_path)
+    if delete_path.kind_of?(Array) && delete_path.empty? then
+      return ;
+    end
     temp = Array.new
+    #temp << delete_path.get_path[0].to_s
     temp << delete_path[0].to_s
     delete_path[1..-2].each_slice(2) do |in_port, out_port|
       temp << out_port.dpid

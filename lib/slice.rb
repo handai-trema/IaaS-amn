@@ -88,15 +88,18 @@ class Slice
   end
 
   def add_mac_address(mac_address, port_attrs)
+    p port_attrs.class
+    p port_attrs
     port = Port.new(port_attrs)
     if @ports[port].include? Pio::Mac.new(mac_address)
-      return ;
+      return "false"
       #fail(MacAddressAlreadyExistsError,
       #    "MAC address #{mac_address} already exists")
     end
     @ports[port] += [Pio::Mac.new(mac_address)]
     puts "add_mac_address:"
     puts @ports[port]
+    return "success"
   end
 
   def delete_mac_address(mac_address, port_attrs)

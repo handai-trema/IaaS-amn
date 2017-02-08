@@ -34,7 +34,7 @@ class TopologyController < Trema::Controller
   end
 
   def switch_disconnected(dpid)
-    @topology.delete_switch dpid
+    #@topology.delete_switch dpid
   end
 
   def port_modify(_dpid, port_status)
@@ -70,6 +70,9 @@ class TopologyController < Trema::Controller
   def flood_lldp_frames
     @topology.ports.each do |dpid, ports|
       send_lldp dpid, ports
+      #ports.each do |port|
+      #  send_message(dpid, PortStats::Request.new(port[:port_no]))
+      #end
     end
   end
 
@@ -85,6 +88,40 @@ class TopologyController < Trema::Controller
     @topology.maybe_update_slice(slice)
   end
 
+  #def stats_reply(dpid, message)
+  #  puts "[FlowDumper::stats_reply]"
+  #  puts "stats of dpid:#{dpid}"
+  #  puts "* transaction id: #{message.transaction_id}"
+  #  puts "* flags: #{message.type}"
+  #  puts "* type: #{message.type}"
+  #  puts message.stats
+
+   # if message.type == Trema::StatsReply::OFPST_PORT
+   #   message.stats.each do |each|
+   #     #puts each.[field]
+   #     rx1 = each.rx_packets
+   #     tx1 = each.tx_packets
+   #     ts1 = time.now.to_i
+   #     entry1 = [rx, tx, ts]
+   #     unless stats.has_key?("#{dpid}")
+   #       stats["#{dpid}"] = entry
+   #     else
+   #       entry0 = stats["#{dpid}"]
+   #       rx0 = entry0[0]
+   #       tx0 = entry0[1]
+   #       ts0 = entry0[2]
+   #       rx = rx1 - rx0
+   #       tx = tx1 - tx0
+   #       ti = ts1 - ts0
+   #       rt_rate = rx / tx
+   #       tx_speed = tx / ti
+   #       if rt_rate < rt_rate_threshold && tx_speed < tx_speed_threshold
+   #         # out!!
+   #       end
+   #     end
+   #   end
+   # end
+  #end
 
   private
 
