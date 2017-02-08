@@ -82,6 +82,7 @@ bundle install --binstubs
 [ vmmanager.ova ](https://ecsosaka-my.sharepoint.com/personal/u141594c_ecs_osaka-u_ac_jp/_layouts/15/guestaccess.aspx?docid=05b93cfed22144d0fb1715bd45ddf518f&authkey=AWI5hSepDEk9yE5A7zCg48I)
 
 1. 仮想イメージをインポートし，仮想マシンを作成する
+
 2. 仮想マシンのネットワーク設定からアダプタ1，2のネットワーク設定をブリッジアダプタにする．ホストマシンのアダプタにはスイッチネットワークと接続されているアダプタを選択する．  
 アダプタ2は高度な設定を開いて，プロミスキャスモードを「すべて許可」にしておく．
 ３. 仮想マシンを起動し，ログインする
@@ -91,6 +92,7 @@ password: password
 ```
 ４. ifconfig でeth0, eth1, docker0, docker1ができていることを確認する．  
 また，各インターフェースのIPアドレスがeth0: 192.168.1.4, eth1: 192.168.1.5, docker1: 192.168.1.5となっていることを確認する
+
 ５. 以下のようにしてeth1のIPアドレスを消去する
 ```
 sudo ip addr del 192.168.1.5/24 dev eth1
