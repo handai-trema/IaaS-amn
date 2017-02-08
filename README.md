@@ -31,25 +31,20 @@ bundle install --binstubs
 ```
 
 1. スイッチ及びスイッチのマネージメントポートに接続し，インターフェースにIPアドレスを設定する
-
-2. 以下のコマンドを実行する
+2. 以下のコマンドを実行する．ただし，<if-M>はif-Mのインターフェース名を表す．
 ```
 sudo route add -host 192.168.1.1 <if-M>
 ```
-ただし，<if-M>はif-Mのインターフェース名を表す．
-
 3. Webサーバを起動する
 ```
 cd ~/IaaS-amn/
 bin/rackup -o 0.0.0.0 &
 ```
-
 4. コントローラを起動する
 ```
 cd ~/IaaS-amn/
 bin/trema run ./lib/routing_switch.rb
 ```
-
 5. 終了するときは，Ctrl + Cでコントローラプログラムを終了し，killコマンドなどでWebサーバを終了する．
 
 ### VMマネージャ
@@ -62,7 +57,6 @@ cd IaaS-amn/
 bundle install --binstubs
 ```
 1. スイッチに接続し，インターフェースにIPアドレスを設定する
-
 2. IaaS-amn/ディレクトリ上で，以下のコマンドを実行し，Webサーバを起動する
 ```
 ./bin/rackup -o 0.0.0.0
@@ -75,29 +69,23 @@ bundle install --binstubs
 [ vmmanager.ova ](https://ecsosaka-my.sharepoint.com/personal/u141594c_ecs_osaka-u_ac_jp/_layouts/15/guestaccess.aspx?docid=05b93cfed22144d0fb1715bd45ddf518f&authkey=AWI5hSepDEk9yE5A7zCg48I)
 
 1. 仮想イメージをインポートし，仮想マシンを作成する
-
 2. 仮想マシンのネットワーク設定からアダプタ1，2のネットワーク設定をブリッジアダプタにする．ホストマシンのアダプタにはスイッチネットワークと接続されているアダプタを選択する．  
 アダプタ2は高度な設定を開いて，プロミスキャスモードを「すべて許可」にしておく．
-
 3. 仮想マシンを起動し，ログインする
 ```
 login: vmmanager  
 password: password
 ```
-
 4. ifconfig でeth0, eth1, docker0, docker1ができていることを確認する．  
 また，各インターフェースのIPアドレスがeth0: 192.168.1.4, eth1: 192.168.1.5, docker1: 192.168.1.5となっていることを確認する
-
 5. 以下のようにしてeth1のIPアドレスを消去する
 ```
 sudo ip addr del 192.168.1.5/24 dev eth1
 ```
-
 6. 以下のコマンドによってコンテナと外部ネットワークをつなぐブリッジと仮想マシンのインターフェースを接続する
 ```
 sudo brctl addif docker1 eth1
 ```
-
 7. 以下のコマンドによってREST APIによる命令を処理するためのWebサーバを起動する
 ```
 cd ~/iaas-amn
